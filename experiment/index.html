@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment</title>
+    <style>
+      body {
+        background-color: coral;
+      }
+      #debug {
+        margin: 100px;
+        font-size: 1em;
+        font-family: sans-serif;
+        width: 400px;
+        height: 600px;
+        padding: 20px;
+        color: white;
+        border-radius: 3px;
+        background-color: #33333333;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="debug"></div>
+    <script>
+      function debug(msg) {
+        debugDiv.innerHTML = debugDiv.innerHTML + msg + "<br/>";
+      }
+      function executeExactlyAt(dateString, callback) {
+        const now = new Date();
+        const target = new Date(dateString);
+        const msUntilTarget = target - now;
+        if (msUntilTarget < 0) throw "target is in the past!";
+        setTimeout(callback, msUntilTarget);
+        debug(now)
+        debug(target)
+        debug(msUntilTarget)
+      }
+      const body = document.querySelector("body");
+      const debugDiv = document.querySelector("#debug");
+
+      executeExactlyAt("2020-07-20T21:36:20+01:00", () => {
+        body.style.backgroundColor = "lightgreen";
+      });
+    </script>
+  </body>
+</html>
