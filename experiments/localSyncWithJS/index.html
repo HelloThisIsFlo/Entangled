@@ -33,14 +33,14 @@
         const msUntilTarget = target - now;
         if (msUntilTarget < 0) throw "target is in the past!";
         setTimeout(callback, msUntilTarget);
-        debug(now)
-        debug(target)
-        debug(msUntilTarget)
+        debug(now);
+        debug(target);
+        debug(msUntilTarget);
       }
       const body = document.querySelector("body");
       const debugDiv = document.querySelector("#debug");
 
-      executeExactlyAt("2020-07-20T21:36:20+01:00", () => {
+      executeExactlyAt("2020-07-21T21:36:20+01:00", () => {
         body.style.backgroundColor = "lightgreen";
       });
     </script>
