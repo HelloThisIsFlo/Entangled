@@ -48,9 +48,10 @@ def plex_login():
     password = load_password()
     res = requests.post(SIGNIN, headers={
         'authorization': auth_header(),
-        'X-Plex-Client-Identifier': 'sandbox'
+        'X-Plex-Client-Identifier': 'sandboxPython'
     })
     print(res.text)
+    print(auth_header())
 
 
 plex_login()
