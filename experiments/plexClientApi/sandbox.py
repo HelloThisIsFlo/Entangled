@@ -4,6 +4,7 @@ from time import sleep
 import requests
 from base64 import b64encode
 
+from requests import Session
 
 def load_password():
     with open('./plex_pass') as pass_file:
@@ -15,7 +16,9 @@ def pause_then_play():
     username = 'shockn745@gmail.com'
     password = load_password()
 
-    account = MyPlexAccount(username, password)
+    session = Session()
+    session.verify = 'charles-ssl-proxying-certificate.pem'
+    account = MyPlexAccount(username, password, session=session)
     debug = account.resources()
     macbook_pro: PlexClient = account.resource('TheMacbookPro').connect()
     duration = int(input('How long to pause for: '))
@@ -54,4 +57,5 @@ def plex_login():
     print(auth_header())
 
 
-plex_login()
+# plex_login()
+pause_then_play()
