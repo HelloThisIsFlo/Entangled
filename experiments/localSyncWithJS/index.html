@@ -28,8 +28,8 @@
         debugDiv.innerHTML = debugDiv.innerHTML + msg + "<br/>";
       }
       function executeExactlyAt(dateString, callback) {
-        const now = new Date();
         const target = new Date(dateString);
+        const now = new Date();
         const msUntilTarget = target - now;
         if (msUntilTarget < 0) throw "target is in the past!";
         setTimeout(callback, msUntilTarget);
@@ -40,7 +40,7 @@
       const body = document.querySelector("body");
       const debugDiv = document.querySelector("#debug");
 
-      executeExactlyAt("2020-07-21T11:16:45+01:00", () => {
+      executeExactlyAt("2020-07-21T18:45:15+01:00", () => {
         body.style.backgroundColor = "lightgreen";
       });
     </script>
