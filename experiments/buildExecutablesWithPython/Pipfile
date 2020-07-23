@@ -9,6 +9,7 @@ autopep8 = "*"
 [packages]
 rumps = "*"
 pyinstaller = "*"
+pystray = "*"
 
 [requires]
 python_version = "3.8"
