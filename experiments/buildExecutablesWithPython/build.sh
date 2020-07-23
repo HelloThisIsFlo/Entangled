@@ -17,9 +17,13 @@ function create_app() {
 }
 
 function build_dmg() {
-    # NPM Tool - Install if needed: 'npm install -g appdmg'
-    # Repo: https://github.com/LinusU/node-appdmg
-    appdmg $DIR/appdmg.json $DIR/dist/sandbox.dmg
+    # # NPM Tool - Install if needed: 'npm install -g appdmg'
+    # # Repo: https://github.com/LinusU/node-appdmg
+    # appdmg $DIR/appdmg.json $DIR/dist/sandbox.dmg
+
+    # NPM Tool - Install if needed: 'npm install -g create-dmg'
+    # Repo: https://github.com/sindresorhus/create-dmg
+    create-dmg $DIR/dist/sandbox.app $DIR/dist
 }
 
 function cleanup() {
