@@ -23,15 +23,29 @@ console.log(authHeader);
 //   .then((data) => console.log(data))
 //   .catch(e => console.log(e))
 
+const fetchXml = (uri, options) =>
+  fetch(uri, options)
+    .then((response) => response.text())
+    .then((xmlString) => new DOMParser().parseFromString(xmlString, "text/xml"))
+    .catch((e) => console.log(e));
+
+async function printPlexToken() {
+  const signInXml = await fetchXml(SIGNIN, {
+    method: "POST",
+    headers: {
+      authorization: authHeader,
+      "X-Plex-Client-Identifier": "sandboxJS",
+    },
+  });
+  const tokenElement = signInXml.getElementsByTagName('authentication-token')[0]
+  const token = tokenElement.textContent
+  console.log(token)
+}
 async function sandboxResources() {
-  const ressourcesXml = await fetch(RESSOURCES, {
+  const ressourcesXml = await fetchXml(RESSOURCES, {
     method: "GET",
     headers: { "X-Plex-Client-Identifier": "sandboxJS", "X-Plex-Token": token },
-  })
-    .then((response) => response.text())
-    .then((xmlString) =>
-      new DOMParser().parseFromString(xmlString, "text/xml")
-    );
+  });
 
   const devices = list(ressourcesXml.getElementsByTagName("Device"));
   console.log(devices);
@@ -48,6 +62,28 @@ async function sandboxResources() {
 
 async function sandboxConnection() {
   const macbookPlayerUri = "http://172.20.10.3:32433";
+  const localResourcesXml = await fetchXml(
+    macbookPlayerUri + "/resources",
+    {
+      method: "GET",
+      headers: {
+        "X-Plex-Client-Identifier": "sandboxJS",
+        "X-Plex-Token": token,
+      },
+    }
+  );
+  console.log(localResourcesXml);
+  const playXml = await fetchXml(
+    macbookPlayerUri + "/player/playback/play?commandID=3&type=video",
+    {
+      method: "GET",
+      headers: {
+        "X-Plex-Client-Identifier": "sandboxJS",
+        "X-Plex-Token": token,
+      },
+    }
+  );
+  console.log(playXml);
   // <Connection
   // protocol="http"
   // address="172.20.10.3"
@@ -56,4 +92,6 @@ async function sandboxConnection() {
   // local="1">
 }
 
-sandboxResources();
+// printPlexToken()
+// sandboxResources();
+sandboxConnection()
