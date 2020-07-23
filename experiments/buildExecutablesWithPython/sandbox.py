@@ -32,7 +32,15 @@ class AwesomeStatusBarApp(rumps.App):
         rumps.notification("Awesome title", "amazing subtitle", "hi!!1")
 
 if __name__ == "__main__":
-    AwesomeStatusBarApp("Awesome App").run()
+    import platform
+    if platform.system() == 'Darwin':
+        AwesomeStatusBarApp("Awesome App").run()
+    elif platform.system() == 'Windows':
+        print('Windows')
+    else:
+        raise f'Platform Not Supported - {platform.system()}'
+
+
 # import tkinter as tk
 # print('hello')
 
