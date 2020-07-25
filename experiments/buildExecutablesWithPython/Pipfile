@@ -10,6 +10,7 @@ autopep8 = "*"
 rumps = "*"
 pyinstaller = "*"
 pystray = "*"
+infi-systray = "*"
 
 [requires]
 python_version = "3.8"

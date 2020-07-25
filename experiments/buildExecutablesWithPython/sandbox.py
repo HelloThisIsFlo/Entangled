@@ -1,3 +1,4 @@
+from infi.systray import SysTrayIcon
 from pystray import Icon, Menu, MenuItem
 import rumps
 import pystray
@@ -75,12 +76,24 @@ icon = Icon(
 )
 
 
+def say_hello(systray):
+    print("Hello, World!")
+
+
+menu_options = (("Say Hello", None, say_hello),)
+systray = SysTrayIcon("icon.ico", "Example tray icon", menu_options)
+
+
 def systray_with_pystray():
     icon.run()
 
 
 def systray_with_rumps():
     AwesomeStatusBarApp("Awesome App").run()
+
+
+def systray_with_infisystray():
+    systray.start()
 
 
 if __name__ == "__main__":
@@ -92,9 +105,11 @@ if __name__ == "__main__":
     def on_windows():
         return platform.system() == 'Windows'
 
-    if on_mac_os() or on_windows():
-        systray_with_pystray()
-        # systray_with_rumps()
+    if on_mac_os():
+        # systray_with_pystray()
+        systray_with_rumps()
+    elif on_windows():
+        systray_with_infisystray()
     else:
         raise f'Platform Not Supported - {platform.system()}'
 
