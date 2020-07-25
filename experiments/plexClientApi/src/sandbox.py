@@ -12,7 +12,6 @@ def load_password():
 
 
 def pause_then_play():
-
     username = 'shockn745@gmail.com'
     password = load_password()
 
