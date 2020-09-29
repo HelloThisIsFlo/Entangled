@@ -18,45 +18,76 @@
 
 const mqtt = require("mqtt");
 
-let mqttClient;
-let mqttStore;
+class MqttClient {
+  mqttClient;
+  mqttStore;
+  msgListeners;
+
+  constructor() {
+    this.mqttStore = [];
+    this.msgListeners = [];
+    this.registerMsgListener((msg) => {
+      this.mqttStore.push(msg);
+    });
+  }
+
+  connectAndSubscribe() {
+    if (this.mqttClient) return;
+
+    const url = "mqtt://localhost";
+    const channel = "entangled";
+    const options = {
+      username: "entangled",
+      password: "hello",
+    };
+
+    this.mqttClient = mqtt.connect(url, options);
+    this.mqttClient.on("connect", () => {
+      this.mqttClient.subscribe(channel);
+    });
+    this.mqttClient.on("message", (_topic, messageBuffer) => {
+      this.notifyAllListeners(messageBuffer.toString());
+    });
+  }
+
+  disconnect() {
+    this.mqttClient.end();
+  }
+
+  notifyAllListeners(newMessage) {
+    for (const listener of this.msgListeners) {
+      listener(newMessage);
+    }
+  }
+
+  registerMsgListener(listener) {
+    this.msgListeners.push(listener);
+  }
+}
+
+const mqttClient = new MqttClient();
 
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   on("task", {
     mqttSubscribe() {
-      const url = "mqtt://localhost";
-      const channel = "entangled";
-      const options = {
-        username: "entangled",
-        password: "hello",
-      };
-
-      if (mqttClient) mqttClient.end();
-      mqttClient = mqtt.connect(url, options);
-      mqttStore = []
-
-      mqttClient.on("connect", () => {
-        mqttClient.subscribe(channel);
-      });
-
-      mqttClient.on("message", (_topic, messageBuffer) => {
-        const message = messageBuffer.toString()
-        console.log(`new msg: ${message}`);
-        mqttStore.push(message);
-      });
-
+      mqttClient.connectAndSubscribe();
       return null;
     },
 
     mqttInspect() {
-      return mqttStore
+      return mqttClient.mqttStore;
+    },
+
+    mqttReceive() {
+      return new Promise((resolve) => {
+        mqttClient.registerMsgListener(resolve);
+      });
     },
 
     mqttEnd() {
-      mqttClient.end();
-
+      mqttClient.disconnect();
       return null;
     },
   });
