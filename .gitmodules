@@ -1,3 +1,6 @@
 [submodule "experiments/buildExecutablesWithPython/TCLChanger"]
 	path = experiments/buildExecutablesWithPython/TCLChanger
 	url = https://github.com/jacob-brown/TCLChanger.git
+[submodule "python-plexapi"]
+	path = python-plexapi
+	url = git@github.com:pkkid/python-plexapi.git

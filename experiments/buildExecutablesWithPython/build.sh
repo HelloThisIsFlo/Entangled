@@ -1,6 +1,14 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+function cleanup() {
+    rm -rf $DIR/build $DIR/dist
+}
+
+function create_app() {
+    pipenv run pyinstaller -w --onefile $DIR/sandbox.py
+}
+
 function create_app_tkinter_version() {
     # Prompting for sudo pass
     sudo echo ""
@@ -12,10 +20,6 @@ function create_app_tkinter_version() {
     sudo python $DIR/TCLChanger/TCLChanger.py
 }
 
-function create_app() {
-    pipenv run pyinstaller -w --onefile $DIR/sandbox.py
-}
-
 function build_dmg() {
     # # NPM Tool - Install if needed: 'npm install -g appdmg'
     # # Repo: https://github.com/LinusU/node-appdmg
@@ -24,10 +28,6 @@ function build_dmg() {
     # NPM Tool - Install if needed: 'npm install -g create-dmg'
     # Repo: https://github.com/sindresorhus/create-dmg
     create-dmg $DIR/dist/sandbox.app $DIR/dist
-}
-
-function cleanup() {
-    rm -rf $DIR/build $DIR/dist
 }
 
 function show_result() {

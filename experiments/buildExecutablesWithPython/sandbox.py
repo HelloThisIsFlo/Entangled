@@ -1,4 +1,3 @@
-from infi.systray import SysTrayIcon
 from pystray import Icon, Menu, MenuItem
 import rumps
 import pystray
@@ -80,9 +79,7 @@ def say_hello(systray):
     print("Hello, World!")
 
 
-menu_options = (("Say Hello", None, say_hello),)
-systray = SysTrayIcon("icon.ico", "Example tray icon", menu_options)
-
+systray = None
 
 def systray_with_pystray():
     icon.run()
@@ -93,6 +90,9 @@ def systray_with_rumps():
 
 
 def systray_with_infisystray():
+    from infi.systray import SysTrayIcon
+    menu_options = (("Say Hello", None, say_hello),)
+    systray = SysTrayIcon("icon.ico", "Example tray icon", menu_options)
     systray.start()
 
 
