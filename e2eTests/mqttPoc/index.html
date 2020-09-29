@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MQTT PoC</title>
+    <style>
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="btn">Click</button>
+    <div id="debug" class="hidden">Hello 😃</div>
+
+    <script>
+      const button = document.querySelector("#btn");
+      const debugDiv = document.querySelector("#debug");
+
+      button.addEventListener("click", (_) => {
+        debugDiv.classList.remove("hidden");
+      });
+    </script>
+  </body>
+</html>
