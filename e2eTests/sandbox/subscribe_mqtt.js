@@ -1,4 +1,3 @@
-const { cli } = require('cypress');
 const mqtt = require('mqtt');
 
 const url = 'mqtt://localhost'

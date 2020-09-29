@@ -15,7 +15,49 @@
 /**
  * @type {Cypress.PluginConfig}
  */
+
+const mqtt = require("mqtt");
+
+let mqttClient;
+let mqttStore;
+
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-}
+  on("task", {
+    mqttSubscribe() {
+      const url = "mqtt://localhost";
+      const channel = "entangled";
+      const options = {
+        username: "entangled",
+        password: "hello",
+      };
+
+      if (mqttClient) mqttClient.end();
+      mqttClient = mqtt.connect(url, options);
+      mqttStore = []
+
+      mqttClient.on("connect", () => {
+        mqttClient.subscribe(channel);
+      });
+
+      mqttClient.on("message", (_topic, messageBuffer) => {
+        const message = messageBuffer.toString()
+        console.log(`new msg: ${message}`);
+        mqttStore.push(message);
+      });
+
+      return null;
+    },
+
+    mqttInspect() {
+      return mqttStore
+    },
+
+    mqttEnd() {
+      mqttClient.end();
+
+      return null;
+    },
+  });
+};
