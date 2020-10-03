@@ -12,7 +12,7 @@ const logMqttMsg = (mqttStore) => {
 
 context("MQTT Poc", () => {
   before(() => {
-    cy.task("mqttSubscribe");
+    cy.task("mqttSubscribe", "entangled");
   });
   beforeEach(() => {
     cy.visit(fakeWebAppUrl);
@@ -41,12 +41,10 @@ context("MQTT Poc", () => {
     });
 
     it("push version", () => {
-      cy.task("mqttInspect")
-        .then(logMqttMsg)
-        .then(() => cy.task("mqttReceive"))
-        .then((message) => {
-          console.log(`Just received a message: ${message}`);
-        });
+      cy.task("mqttReceive").then((message) => {
+        console.log(`Just received a message: ${message}`);
+        expect(message).to.not.be.null;
+      });
     });
   });
 });

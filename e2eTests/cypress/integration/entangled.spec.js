@@ -3,13 +3,24 @@
 const entangledUrl = "http://localhost:7777";
 
 context("Entangled", () => {
+  before(() => {
+    cy.task("mqttSubscribe", "entangled");
+  });
   beforeEach(() => {
     cy.visit(entangledUrl);
   });
 
-  it("placeholder", () => {
-    cy.get(".action-email")
-      .type("fake@email.com")
-      .should("have.value", "fake@email.com");
+  after(() => {
+    cy.task("mqttEnd");
+  });
+
+  it("sends 'play' message when clicking 'Play'", () => {
+    // Toni clicks on the play button
+    cy.get("#play-btn").click();
+
+    // Entangled sends a play message on the 'entangled' MQTT channel
+    cy.task("mqttReceive").then((message) => {
+      expect(message).to.not.be.null;
+    });
   });
 });

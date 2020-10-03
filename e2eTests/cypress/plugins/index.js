@@ -31,11 +31,10 @@ class MqttClient {
     });
   }
 
-  connectAndSubscribe() {
+  connectAndSubscribe(channel) {
     if (this.mqttClient) return;
 
     const url = "mqtt://localhost";
-    const channel = "entangled";
     const options = {
       username: "entangled",
       password: "hello",
@@ -71,8 +70,8 @@ module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   on("task", {
-    mqttSubscribe() {
-      mqttClient.connectAndSubscribe();
+    mqttSubscribe(channel) {
+      mqttClient.connectAndSubscribe(channel);
       return null;
     },
 
