@@ -6,7 +6,7 @@ from src.logger import logger
 class MQTTClient:
     def __init__(self):
         self.topic = config['mqtt']['topic']
-        self.paho_client = mqtt.Client(client_id='DnD-Local-Wrapper')
+        self.paho_client = mqtt.Client(client_id='entangled')
         self.paho_client.on_connect = self._on_connect
         # self.paho_client.on_message = self.on_message
 
@@ -25,10 +25,10 @@ class MQTTClient:
             host=config['mqtt']['domain'],
             port=config['mqtt']['port'])
         self.paho_client.loop_start()
-        # self.paho_client.loop_forever()
 
     def destroy(self):
         self.paho_client.loop_stop()
+        self.paho_client.disconnect()
 
     @staticmethod
     def _on_connect(client, _userdata, _flags, _rc):

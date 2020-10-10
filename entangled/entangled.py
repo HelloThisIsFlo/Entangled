@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 import sys
+import atexit
 
 from src.logger import configure_logger
 from src.mqtt import MQTTClient
@@ -11,6 +12,7 @@ app = Flask(__name__)
 
 mqtt_client = MQTTClient()
 mqtt_client.connect()
+atexit.register(mqtt_client.destroy)
 logger.info('module init')
 
 
