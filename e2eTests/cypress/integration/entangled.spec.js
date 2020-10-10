@@ -3,14 +3,12 @@
 const entangledUrl = "http://localhost:7777";
 
 context("Entangled", () => {
-  before(() => {
-    cy.task("mqttSubscribe", "entangled");
-  });
   beforeEach(() => {
+    cy.task("mqttSubscribe", "entangled");
     cy.visit(entangledUrl);
   });
 
-  after(() => {
+  afterEach(() => {
     cy.task("mqttEnd");
   });
 
@@ -18,7 +16,7 @@ context("Entangled", () => {
     // Toni clicks on the play button
     cy.get("#play-btn").click();
 
-    // Entangled sends a play message on the 'entangled' MQTT channel
+    // Entangled sends a 'play' message on the 'entangled' MQTT channel
     cy.task("mqttReceive").then((message) => {
       expect(message).to.not.be.null;
     });

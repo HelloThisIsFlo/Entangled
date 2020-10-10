@@ -19,7 +19,7 @@
 const mqtt = require("mqtt");
 
 class MqttClient {
-  mqttClient;
+  mqttClient = null;
   mqttStore;
   msgListeners;
 
@@ -32,7 +32,7 @@ class MqttClient {
   }
 
   connectAndSubscribe(channel) {
-    if (this.mqttClient) return;
+    if (this.isConnected()) this.disconnect();
 
     const url = "mqtt://localhost";
     const options = {
@@ -49,8 +49,15 @@ class MqttClient {
     });
   }
 
+  isConnected() {
+    return this.mqttClient !== null;
+  }
+
   disconnect() {
+    if (!this.isConnected()) return;
+
     this.mqttClient.end();
+    this.mqttClient = null;
   }
 
   notifyAllListeners(newMessage) {
@@ -75,14 +82,19 @@ module.exports = (on, config) => {
       return null;
     },
 
-    mqttInspect() {
-      return mqttClient.mqttStore;
-    },
-
     mqttReceive() {
+      console.log(`[mqttReceive] ${mqttClient.mqttStore}`);
       return new Promise((resolve) => {
+        if (mqttClient.mqttStore.length > 0) {
+          const lastReceivedMessage = mqttClient.mqttStore.pop();
+          resolve(lastReceivedMessage);
+        }
         mqttClient.registerMsgListener(resolve);
       });
+    },
+
+    mqttInspect() {
+      return mqttClient.mqttStore;
     },
 
     mqttEnd() {
