@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entangled</title>
+  </head>
+  <body>
+    <h1>Hello {{ example_var }}</h1>
+
+    <button id="play-btn">Play</button>
+
+    <script>
+      const playBtn = document.querySelector("#play-btn");
+
+      playBtn.addEventListener("click", async (_) => {
+        const response = await fetch("/play", {
+          method: "post",
+        });
+        const responseText = await response.text();
+        console.log("Called '/play' endpoint");
+        console.log(`Response: ${responseText}`);
+      });
+    </script>
+  </body>
+</html>
