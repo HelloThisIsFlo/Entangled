@@ -13,12 +13,19 @@ context("Entangled", () => {
   });
 
   it("sends 'play' message when clicking 'Play'", () => {
+    // The movie is currently stopped at 1h 37min
+    cy.get("#e2e-mock-movie-time").type("1:37");
+    cy.get('#e2e-mock-submit').click()
+
     // Toni clicks on the play button
     cy.get("#play-btn").click();
 
     // Entangled sends a 'play' message on the 'entangled' MQTT channel
-    cy.task("mqttReceive").then((message) => {
-      expect(message).to.not.be.null;
+    //  - with the movie time
+    cy.task("mqttReceive").then((rawMessage) => {
+      const message = JSON.parse(rawMessage);
+      expect(message).to.have.property("movieTime");
+      expect(message.movieTime).to.be("1:37");
     });
   });
 
@@ -26,11 +33,11 @@ context("Entangled", () => {
   Notes:
   We want to implement feature 1
     - When click play it sends a 'play' message with:
-      - movie_time: current movie time
-      - play_at: timestamp of now + DELAY (configured at 5min for cypress, tweak in real life)
+      - movieTime: current movie time
+      - playAt: timestamp of now + DELAY (configured at 5min for cypress, tweak in real life)
 
   Question: 
-    - How to mock current movie time
+    - How to mock current movie time ✅
     - How to check delay ✅
 
   # How to check delay
@@ -39,8 +46,8 @@ context("Entangled", () => {
   - Create a launch flag '-env E2E|prod'
 
   # How to mock the current movie time
-  Create a 'cypress-mock-interface' that contains:
-    - a text field: 'cypress-mock-movie-time'
+  Create a 'e2e-mock-interface' that contains:
+    - a text field: 'e2e-mock-movie-time'
 
 
 
