@@ -20,15 +20,10 @@ const mqtt = require("mqtt");
 
 class MqttClient {
   mqttClient = null;
-  mqttStore;
   msgListeners;
 
   constructor() {
-    this.mqttStore = [];
     this.msgListeners = [];
-    this.registerMsgListener((msg) => {
-      this.mqttStore.push(msg);
-    });
   }
 
   connectAndSubscribe(channel) {
@@ -72,33 +67,35 @@ class MqttClient {
 }
 
 const mqttClient = new MqttClient();
+let waitingForMsgPromise;
 
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   on("task", {
-    mqttSubscribe(channel) {
+    mqttInit(channel) {
       mqttClient.connectAndSubscribe(channel);
       return null;
     },
 
-    mqttReceive() {
-      console.log(`[mqttReceive] ${mqttClient.mqttStore}`);
-      return new Promise((resolve) => {
-        const alreadyReceivedAMessage = mqttClient.mqttStore.length > 0
-        if (alreadyReceivedAMessage) {
-          const lastReceivedMessage = mqttClient.mqttStore.pop();
-          resolve(lastReceivedMessage);
-        }
+    mqttListenForMsg() {
+      waitingForMsgPromise = new Promise((resolve) => {
         mqttClient.registerMsgListener(resolve);
       });
+      return null;
     },
 
-    mqttInspect() {
-      return mqttClient.mqttStore;
+    mqttOnMsg() {
+      if (waitingForMsgPromise == null) {
+        throw new Error("Call 'mqttListenForMsg' before calling 'mqttOnMsg'");
+      }
+
+      const pendingWaitingForMsgPromise = waitingForMsgPromise;
+      waitingForMsgPromise = null;
+      return pendingWaitingForMsgPromise;
     },
 
-    mqttEnd() {
+    mqttDestroy() {
       mqttClient.disconnect();
       return null;
     },

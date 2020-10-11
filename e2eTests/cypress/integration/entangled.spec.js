@@ -4,38 +4,31 @@ const entangledUrl = "http://localhost:7777";
 
 context("Entangled", () => {
   beforeEach(() => {
-    cy.task("mqttSubscribe", "entangled");
+    cy.task("mqttInit", "entangled");
     cy.visit(entangledUrl);
   });
 
   afterEach(() => {
-    cy.task("mqttEnd");
+    cy.task("mqttDestroy");
   });
 
   it("sends 'play' message when clicking 'Play'", () => {
-    // TODO: Rework mqtt interface following toni's comment
-    // - mqttSubscribe => mqttInit (topic)
-    // Then:
-    //  - mqttListenForMessage <- before clicking play
-    //  - PLAY
-    //  - onMessage <- After clicking play
-
-    const MOCK_MOVIE_TIME = "1:37"
-
     // The movie is currently stopped at 1h 37min
+    const MOCK_MOVIE_TIME = "1:37";
     cy.get("#e2e-mock-movie-time").type(MOCK_MOVIE_TIME);
-    cy.get('#e2e-mock-submit').click()
+    cy.get("#e2e-mock-submit").click();
+
+    cy.task("mqttListenForMsg");
 
     // Toni clicks on the play button
     cy.get("#play-btn").click();
 
     // Entangled sends a 'play' message on the 'entangled' MQTT channel
     //  - with the movie time
-    cy.task("mqttReceive").then((rawMessage) => {
+    cy.task("mqttOnMsg").then((rawMessage) => {
       const message = JSON.parse(rawMessage);
       expect(message).to.have.property("movieTime");
-
-      expect(message.movieTime).to.equal(MOCK_MOVIE_TIME)
+      expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
     });
   });
 
