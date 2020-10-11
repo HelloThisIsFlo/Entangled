@@ -27,8 +27,20 @@ context("Entangled", () => {
     //  - with the movie time
     cy.task("mqttOnMsg").then((rawMessage) => {
       const message = JSON.parse(rawMessage);
+
       expect(message).to.have.property("movieTime");
       expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
+
+      // Start delay is configured at 5 min when running the app for e2e tests
+      // We then assert 5 min ± 10 sec to account for the run time of the test
+      const sec = (secNum) => secNum * 1000;
+      const min = (minNum) => sec(minNum * 60);
+      const now = Date.now();
+      const nowPlus5Min10Sec = now + min(5);
+      const nowPlus4Min50Sec = now + min(4) + sec(50);
+      expect(message).to.have.property("playAt");
+      expect(message.playAt).to.be.above(nowPlus4Min50Sec);
+      expect(message.playAt).to.be.below(nowPlus5Min10Sec);
     });
   });
 
