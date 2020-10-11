@@ -2,13 +2,14 @@ from flask import Flask, render_template
 import sys
 import atexit
 
-from src.logger import configure_logger
-from src.mqtt import MQTTClient
-from src.logger import logger
+from entangled.mqtt import MQTTClient
+from entangled.logger import logger
 
 
-app = Flask(__name__)
-
+app = Flask(
+    __name__,
+    template_folder='../templates'
+)
 
 mqtt_client = MQTTClient()
 mqtt_client.connect()

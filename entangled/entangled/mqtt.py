@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
-from src.config import config
-from src.logger import logger
+from entangled.config import config
+from entangled.logger import logger
 
 
 class MQTTClient:
