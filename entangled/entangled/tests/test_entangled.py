@@ -1,12 +1,9 @@
-
-# Todo:
-# - test that it connects on connect
-# - test that it registers disconnect hook on connect
-
 import pytest
 from unittest.mock import patch
 from entangled.entangled import Entangled
 from entangled.plex import PlexApi
+from datetime import datetime
+from entangled.config import config
 
 
 @pytest.fixture
@@ -58,3 +55,19 @@ class TestSendPlayMessageOnPlay:
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
         assert 'movieTime' in msg_sent
         assert msg_sent['movieTime'] == MOCK_MOVIE_TIME
+
+    @patch('entangled.entangled.datetime')
+    def test_mqtt_message_contains_play_at_time(self, datetime_mock, entangled, plex_api_mock: PlexApi, mqtt_client_mock):
+        def timestamp_in_ms(dt):
+            return int(dt.timestamp()) * 1000
+
+        config['entangled']['start_delay'] = 5 # 5 secs
+        now = datetime.fromisoformat('2020-11-27T13:45:23')
+        now_plus_5_sec = datetime.fromisoformat('2020-11-27T13:45:28')
+        datetime_mock.now.return_value = now
+
+        entangled.play()
+
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'playAt' in msg_sent
+        assert msg_sent['playAt'] == timestamp_in_ms(now_plus_5_sec)

@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, redirect
-import sys
 import atexit
 
 from entangled.logger import logger
 from entangled.entangled import Entangled
 from entangled.plex import PythonLibPlexApi, MockPlexApi
+from entangled.config import config, minutes
 
 
 ENVS = [
@@ -25,6 +25,9 @@ def initialize_app(env):
         app.config['ENTANGLED'] = Entangled(plex_api)
         if env == 'prod' or env == 'e2e_tests':
             app.config['ENTANGLED'].connect_to_mqtt()
+
+        if env == 'e2e_tests':
+            config['entangled']['start_delay'] = minutes(5)
 
     if env not in ENVS:
         raise ValueError(f"Invalid env name: '{env}'")
