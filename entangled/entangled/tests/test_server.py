@@ -14,16 +14,11 @@ def test_renders_the_main_page(render_template_mock, client):
     assert resp.data.decode() == MOCK_HTML
 
 
-class TestPlay:
-    @patch('entangled.mqtt.MQTTClient')
-    def test_sends_play_message(self, MQTTClientMock, client, app):
-        mqtt_client_mock = MQTTClientMock()
-        app.config['MQTT_CLIENT'] = mqtt_client_mock
+@patch('entangled.entangled.Entangled')
+def test_sends_play_message(EntangledMock, client, app):
+    entangled_mock = EntangledMock()
+    app.config['ENTANGLED'] = entangled_mock
 
-        client.post('/play')
+    client.post('/play')
 
-        mqtt_client_mock.send_message.assert_called_once_with('play')
-
-    def test_gets_current_movie_time(self):
-        # later
-        pass
+    entangled_mock.play.assert_called_once()

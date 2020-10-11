@@ -85,7 +85,8 @@ module.exports = (on, config) => {
     mqttReceive() {
       console.log(`[mqttReceive] ${mqttClient.mqttStore}`);
       return new Promise((resolve) => {
-        if (mqttClient.mqttStore.length > 0) {
+        const alreadyReceivedAMessage = mqttClient.mqttStore.length > 0
+        if (alreadyReceivedAMessage) {
           const lastReceivedMessage = mqttClient.mqttStore.pop();
           resolve(lastReceivedMessage);
         }

@@ -13,6 +13,13 @@ context("Entangled", () => {
   });
 
   it("sends 'play' message when clicking 'Play'", () => {
+    // TODO: Rework mqtt interface following toni's comment
+    // - mqttSubscribe => mqttInit (topic)
+    // Then:
+    //  - mqttListenForMessage <- before clicking play
+    //  - PLAY
+    //  - onMessage <- After clicking play
+
     // The movie is currently stopped at 1h 37min
     cy.get("#e2e-mock-movie-time").type("1:37");
     cy.get('#e2e-mock-submit').click()
