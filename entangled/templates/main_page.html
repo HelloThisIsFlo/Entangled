@@ -10,6 +10,13 @@
 
     <button id="play-btn">Play</button>
 
+    <form action="/e2e-mock" method="post" id="e2e-mock-interface">
+      <label for="movie-time">Mock Movie Time</label>
+      <input type="text" name="movie-time" id="e2e-mock-movie-time" />
+
+      <input type="submit" value="Set mocks" id="e2e-mock-submit">
+    </form>
+
     <script>
       const playBtn = document.querySelector("#play-btn");
 

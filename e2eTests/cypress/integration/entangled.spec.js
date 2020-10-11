@@ -20,8 +20,10 @@ context("Entangled", () => {
     //  - PLAY
     //  - onMessage <- After clicking play
 
+    const MOCK_MOVIE_TIME = "1:37"
+
     // The movie is currently stopped at 1h 37min
-    cy.get("#e2e-mock-movie-time").type("1:37");
+    cy.get("#e2e-mock-movie-time").type(MOCK_MOVIE_TIME);
     cy.get('#e2e-mock-submit').click()
 
     // Toni clicks on the play button
@@ -32,7 +34,8 @@ context("Entangled", () => {
     cy.task("mqttReceive").then((rawMessage) => {
       const message = JSON.parse(rawMessage);
       expect(message).to.have.property("movieTime");
-      expect(message.movieTime).to.be("1:37");
+
+      expect(message.movieTime).to.equal(MOCK_MOVIE_TIME)
     });
   });
 

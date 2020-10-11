@@ -1,9 +1,10 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect
 import sys
 import atexit
 
 from entangled.logger import logger
 from entangled.entangled import Entangled
+from entangled.plex import PythonLibPlexApi, MockPlexApi
 
 
 ENVS = [
@@ -15,6 +16,13 @@ ENVS = [
 
 def initialize_app(env):
     def initialize_deps():
+        if env == 'e2e_tests':
+            plex_api = MockPlexApi()
+        else:
+            plex_api = PythonLibPlexApi()
+
+        app.config['PLEX_API'] = plex_api
+        app.config['ENTANGLED'] = Entangled(plex_api)
         if env == 'prod' or env == 'e2e_tests':
             app.config['ENTANGLED'].connect_to_mqtt()
 
@@ -22,7 +30,6 @@ def initialize_app(env):
         raise ValueError(f"Invalid env name: '{env}'")
 
     app = Flask(__name__, template_folder='../templates')
-    app.config['ENTANGLED'] = Entangled()
 
     initialize_deps()
 
@@ -34,5 +41,11 @@ def initialize_app(env):
     def play():
         app.config['ENTANGLED'].play()
         return 'playing'
+
+    @app.route('/e2e-mock', methods=['POST'])
+    def e2e_mock():
+        plex_api: MockPlexApi = app.config['PLEX_API']
+        plex_api.mock_current_movie_time = request.form['movie-time']
+        return redirect('/')
 
     return app

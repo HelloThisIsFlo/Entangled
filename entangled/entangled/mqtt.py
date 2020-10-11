@@ -1,3 +1,4 @@
+import json
 import paho.mqtt.client as mqtt
 from entangled.config import config
 from entangled.logger import logger
@@ -14,7 +15,8 @@ class MQTTClient:
             config['mqtt']['user'],
             config['mqtt']['pass'])
 
-    def send_message(self, message):
+    def send_message(self, message_as_dict):
+        message = json.dumps(message_as_dict)
         self.paho_client.publish(
             self.topic,
             payload=message)
@@ -27,6 +29,7 @@ class MQTTClient:
         self.paho_client.loop_start()
 
     def destroy(self):
+        logger.info('Disconnecting from MQTT')
         self.paho_client.loop_stop()
         self.paho_client.disconnect()
 
