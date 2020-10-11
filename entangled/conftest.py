@@ -1,14 +1,16 @@
-import os
-import tempfile
-
 import pytest
 
-import entangled
+import entangled.server as server
 
 
 @pytest.fixture
-def client():
-    entangled.app.config['TESTING'] = True
+def app():
+    return server.initialize_app('unit_tests')
 
-    with entangled.app.test_client() as client:
+
+@pytest.fixture
+def client(app):
+    app.config['TESTING'] = True
+
+    with app.test_client() as client:
         yield client
