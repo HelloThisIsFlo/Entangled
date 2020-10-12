@@ -21,4 +21,4 @@ def test_sends_play_message(EntangledMock, client, app):
 
     client.post('/play')
 
-    entangled_mock.play.assert_called_once()
+    entangled_mock.send_play_cmd.assert_called_once()

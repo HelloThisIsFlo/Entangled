@@ -41,15 +41,15 @@ def first_arg_of_last_call(mock):
 
 class TestSendPlayMessageOnPlay:
     def test_sends_mqtt_message(self, entangled: Entangled, mqtt_client_mock):
-        entangled.play()
+        entangled.send_play_cmd()
         mqtt_client_mock.send_message.assert_called_once()
 
     def test_gets_current_movie_time(self, entangled, plex_api_mock: PlexApi):
-        entangled.play()
+        entangled.send_play_cmd()
         plex_api_mock.current_movie_time.assert_called_once()
 
     def test_mqtt_message_contains_type(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
-        entangled.play()
+        entangled.send_play_cmd()
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
         assert 'type' in msg_sent
         assert msg_sent['type'] == 'play'
@@ -57,7 +57,7 @@ class TestSendPlayMessageOnPlay:
     def test_mqtt_message_contains_current_movie_time(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
         MOCK_MOVIE_TIME = "2:27:31"
         plex_api_mock.current_movie_time.return_value = MOCK_MOVIE_TIME
-        entangled.play()
+        entangled.send_play_cmd()
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
         assert 'movieTime' in msg_sent
         assert msg_sent['movieTime'] == MOCK_MOVIE_TIME
@@ -72,7 +72,7 @@ class TestSendPlayMessageOnPlay:
         now_plus_5_sec = datetime.fromisoformat('2020-11-27T13:45:28')
         datetime_mock.now.return_value = now
 
-        entangled.play()
+        entangled.send_play_cmd()
 
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
         assert 'playAt' in msg_sent

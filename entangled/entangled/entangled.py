@@ -15,7 +15,7 @@ class Entangled:
         self.mqtt_client.connect()
         atexit.register(self.mqtt_client.destroy)
 
-    def play(self):
+    def send_play_cmd(self):
         def now_timestamp():
             return int(datetime.now().timestamp())
 

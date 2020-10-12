@@ -46,7 +46,7 @@ def initialize_app(env):
 
     @app.route('/play', methods=['POST'])
     def play():
-        app.config['ENTANGLED'].play()
+        app.config['ENTANGLED'].send_play_cmd()
         return 'playing'
 
     @app.route('/e2e-mock', methods=['POST'])
