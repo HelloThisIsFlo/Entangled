@@ -12,8 +12,8 @@ context("Entangled", () => {
     cy.visit(entangledUrl);
 
     // Reset recorded mock calls
-    cy.get('#e2e-mock-reset-mock-calls').click()
-    cy.get('#e2e-mock-submit').click()
+    cy.get("#e2e-mock-reset-mock-calls").click();
+    cy.get("#e2e-mock-submit").click();
   });
 
   afterEach(() => {
@@ -40,7 +40,7 @@ context("Entangled", () => {
       const message = JSON.parse(rawMessage);
 
       expect(message).to.have.property("type");
-      expect(message.type).to.be.equal('play')
+      expect(message.type).to.be.equal("play");
 
       expect(message).to.have.property("movieTime");
       expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
@@ -54,6 +54,44 @@ context("Entangled", () => {
       expect(message.playAt).to.be.above(nowPlus3SecLoBound);
       expect(message.playAt).to.be.below(nowPlus3SecHiBound);
     });
+  });
+
+  it("starts movie at correct time when receiving 'play' message", () => {
+    const now = Date.now();
+    const movieTime = "2:15:34";
+    const playAtTime = now + seconds(4);
+
+    // Some user clicked play, and a 'play' message was sent on the queue
+    cy.task("mqttSend", {
+      type: "play",
+      movieTime: movieTime,
+      playAt: playAtTime,
+    });
+
+    /*****************************************/
+    /* Toni's entangled receives the message */
+    /*****************************************/
+
+    // Entangled seeks the movie to the 'movieTime'
+    cy.getLastCallToMockPlexApi().then((lastMockCall) => {
+      // Here '2 15 34' correspond to movieTime: '2:15:34'
+      expect(lastMockCall).to.be.equal("seekTo 2 15 34");
+    });
+
+    // Then nothing happens until during 'playAt' time, which is 4 sec from now.
+    // This allows:
+    //  - Time for all players to receive the message
+    //  - Time for buffering after they received the msg and
+    //    seeked to the correct point in the movie
+    cy.get("#e2e-mock-plex-api-calls").contains("play").should("not.exist");
+
+    // When the movie eventually starts, it is exactly 'playAtTime' (+/- delta)
+    cy.get("#e2e-mock-plex-api-calls")
+      .contains("play")
+      .then((_) => {
+        const timeWhenMovieStartsPlaying = Date.now();
+        expect(timeWhenMovieStartsPlaying).is.closeTo(playAtTime, deltaMs);
+      });
   });
 
   /*

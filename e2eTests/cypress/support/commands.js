@@ -23,3 +23,9 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+Cypress.Commands.add("getLastCallToMockPlexApi", () =>
+  cy
+    .get("#e2e-mock-plex-api-calls > :last-child")
+    .then((element) => element.text())
+);

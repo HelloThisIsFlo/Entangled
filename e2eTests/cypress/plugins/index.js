@@ -23,6 +23,7 @@ class MqttClient {
   msgListeners;
 
   constructor() {
+    this.topic = "entangled";
     this.msgListeners = [];
   }
 
@@ -64,6 +65,10 @@ class MqttClient {
   registerMsgListener(listener) {
     this.msgListeners.push(listener);
   }
+
+  send(message) {
+    this.mqttClient.publish(this.topic, message);
+  }
 }
 
 const mqttClient = new MqttClient();
@@ -93,6 +98,11 @@ module.exports = (on, config) => {
       const pendingWaitingForMsgPromise = waitingForMsgPromise;
       waitingForMsgPromise = null;
       return pendingWaitingForMsgPromise;
+    },
+
+    mqttSend(msg) {
+      mqttClient.send(JSON.stringify(msg))
+      return null;
     },
 
     mqttDestroy() {
