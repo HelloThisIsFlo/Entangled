@@ -21,6 +21,10 @@ context("Entangled", () => {
   });
 
   it.skip("sends 'play' message when clicking 'Play'", () => {
+    // TODO: Fix skipped => The problem was that it would schedule a callback and fuck up the next test
+    // TODO: => The problem was that it would schedule a callback and fuck up the next test
+    // TODO:    Find a way to prevent that
+
     // The movie is currently stopped at 1h 37min 21sec
     const MOCK_MOVIE_TIME = "1:37:21";
     cy.get("#e2e-mock-movie-time").type(MOCK_MOVIE_TIME);
@@ -93,6 +97,10 @@ context("Entangled", () => {
         expect(timeWhenMovieStartsPlaying).is.closeTo(playAtTime, deltaMs);
       });
   });
+
+  it("ignores play messages if a 'play' cmd is already scheduled", () => {
+    cy.log("TODO")
+  })
 
   /*
   Notes:
