@@ -2,6 +2,10 @@
 
 const entangledUrl = "http://localhost:7777";
 
+const milliSeconds = (milliSecNum) => milliSecNum;
+const seconds = (secNum) => milliSeconds(secNum * 1000);
+const deltaMs = 900;
+
 context("Entangled", () => {
   beforeEach(() => {
     cy.task("mqttInit", "entangled");
@@ -42,12 +46,10 @@ context("Entangled", () => {
       expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
 
       // Start delay is configured at 3 sec when running the app for e2e tests
-      // We then assert 3 sec ± 900 millisec to account for the run time of the test
-      const milliSec = (milliSecNum) => milliSecNum;
-      const sec = (secNum) => milliSec(secNum * 1000);
-      const deltaMs = 900
-      const nowPlus3SecHiBound = now + sec(3) + milliSec(deltaMs);
-      const nowPlus3SecLoBound = now + sec(3) - milliSec(deltaMs);
+      // We then assert 3 sec ± delta to account for the execution time of the
+      // test & app, as well as propagation time for the mqtt message.
+      const nowPlus3SecHiBound = now + seconds(3) + milliSeconds(deltaMs);
+      const nowPlus3SecLoBound = now + seconds(3) - milliSeconds(deltaMs);
       expect(message).to.have.property("playAt");
       expect(message.playAt).to.be.above(nowPlus3SecLoBound);
       expect(message.playAt).to.be.below(nowPlus3SecHiBound);
