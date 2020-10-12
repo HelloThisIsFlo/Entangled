@@ -75,7 +75,7 @@ context("Entangled", () => {
     // Entangled seeks the movie to the 'movieTime'
     cy.getLastCallToMockPlexApi().then((lastMockCall) => {
       // Here '2 15 34' correspond to movieTime: '2:15:34'
-      expect(lastMockCall).to.be.equal("seekTo 2 15 34");
+      expect(lastMockCall).to.be.equal("seek_to 2 15 34");
     });
 
     // Then nothing happens until during 'playAt' time, which is 4 sec from now.

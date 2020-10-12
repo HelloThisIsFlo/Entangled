@@ -84,3 +84,16 @@ class TestSendPlayCmd:
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
         assert 'playAt' in msg_sent
         assert msg_sent['playAt'] == timestamp_in_ms(now_plus_5_sec)
+
+
+class TestReceivePlayCmd:
+    def test_it_seeks_to_movie_time(self, entangled: Entangled, plex_api_mock: PlexApi):
+        entangled._on_play_cmd({
+            'type': 'play',
+            'movieTime': '1:23:45',
+            'playAt': 1602516359362,
+        })
+
+        plex_api_mock.seek_to.assert_called_once_with(
+            1, 23, 45
+        )

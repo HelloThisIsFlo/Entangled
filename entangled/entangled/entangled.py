@@ -35,8 +35,10 @@ class Entangled:
         })
 
     def _on_play_cmd(self, cmd):
-        print('RECEIVED PLAY CMD !!!!!!!!!!!!!!!!!!')
-        print('RECEIVED PLAY CMD !!!!!!!!!!!!!!!!!!')
-        print(cmd)
-        print('RECEIVED PLAY CMD !!!!!!!!!!!!!!!!!!')
-        print('RECEIVED PLAY CMD !!!!!!!!!!!!!!!!!!')
+        def movie_time(cmd):
+            return tuple(map(
+                int,
+                cmd['movieTime'].split(':')
+            ))
+
+        self.plex_api.seek_to(*movie_time(cmd))
