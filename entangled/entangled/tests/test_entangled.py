@@ -48,8 +48,14 @@ class TestSendPlayMessageOnPlay:
         entangled.play()
         plex_api_mock.current_movie_time.assert_called_once()
 
+    def test_mqtt_message_contains_type(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
+        entangled.play()
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'type' in msg_sent
+        assert msg_sent['type'] == 'play'
+
     def test_mqtt_message_contains_current_movie_time(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
-        MOCK_MOVIE_TIME = "2:27"
+        MOCK_MOVIE_TIME = "2:27:31"
         plex_api_mock.current_movie_time.return_value = MOCK_MOVIE_TIME
         entangled.play()
         msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)

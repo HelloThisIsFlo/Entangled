@@ -25,6 +25,7 @@ class Entangled:
         play_at = (now_timestamp() + start_delay) * 1000
 
         self.mqtt_client.send_message({
+            'type': 'play',
             'movieTime': current_movie_time,
             'playAt': play_at
         })
