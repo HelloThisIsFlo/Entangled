@@ -4,7 +4,7 @@ import atexit
 from entangled.logger import logger
 from entangled.entangled import Entangled
 from entangled.plex import PythonLibPlexApi, MockPlexApi
-from entangled.config import config, minutes
+from entangled.config import config, minutes, seconds
 
 
 ENVS = [
@@ -27,7 +27,7 @@ def initialize_app(env):
             app.config['ENTANGLED'].connect_to_mqtt()
 
         if env == 'e2e_tests':
-            config['entangled']['start_delay'] = minutes(5)
+            config['entangled']['start_delay'] = seconds(3)
 
     if env not in ENVS:
         raise ValueError(f"Invalid env name: '{env}'")

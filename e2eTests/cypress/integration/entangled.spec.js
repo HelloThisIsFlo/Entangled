@@ -18,7 +18,10 @@ context("Entangled", () => {
     cy.get("#e2e-mock-movie-time").type(MOCK_MOVIE_TIME);
     cy.get("#e2e-mock-submit").click();
 
+    /* Prepare assertions */
     cy.task("mqttListenForMsg");
+    const now = Date.now();
+    /* Prepare assertions */
 
     // Toni clicks on the play button
     cy.get("#play-btn").click();
@@ -31,46 +34,37 @@ context("Entangled", () => {
       expect(message).to.have.property("movieTime");
       expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
 
-      // Start delay is configured at 5 min when running the app for e2e tests
-      // We then assert 5 min ± 10 sec to account for the run time of the test
-      const sec = (secNum) => secNum * 1000;
-      const min = (minNum) => sec(minNum * 60);
-      const now = Date.now();
-      const nowPlus5Min10Sec = now + min(5);
-      const nowPlus4Min50Sec = now + min(4) + sec(50);
+      // Start delay is configured at 3 sec when running the app for e2e tests
+      // We then assert 3 sec ± 900 millisec to account for the run time of the test
+      const milliSec = (milliSecNum) => milliSecNum;
+      const sec = (secNum) => milliSec(secNum * 1000);
+      const deltaMs = 900
+      const nowPlus3SecHiBound = now + sec(3) + milliSec(deltaMs);
+      const nowPlus3SecLoBound = now + sec(3) - milliSec(deltaMs);
       expect(message).to.have.property("playAt");
-      expect(message.playAt).to.be.above(nowPlus4Min50Sec);
-      expect(message.playAt).to.be.below(nowPlus5Min10Sec);
+      expect(message.playAt).to.be.above(nowPlus3SecLoBound);
+      expect(message.playAt).to.be.below(nowPlus3SecHiBound);
     });
   });
 
   /*
   Notes:
-  We want to implement feature 1
-    - When click play it sends a 'play' message with:
+  We want to implement feature 2
+    - When receive a 'play' message with:
       - movieTime: current movie time
-      - playAt: timestamp of now + DELAY (configured at 5min for cypress, tweak in real life)
+      - playAt: timestamp when to play
+    - We want to:
+      - Seek to 'movieTime'
+      - Schedule a 'play' plex command at 'playAt'
 
   Question: 
-    - How to mock current movie time ✅
-    - How to check delay ✅
+    - How to check `seekTo` was called with the correct arguments? ✅
+      => Have a section on the webui logging calls made to the MockPlexApi
+      => And check that call to seekTo is there
 
-  # How to check delay
-  For this one, set a version of the system that configures the delay to 5min when running for Cypress.
-  Then in cypress just check the 'play_at' timestamp is 'now + 5min (+/- 10sec)'
-  - Create a launch flag '-env E2E|prod'
-
-  # How to mock the current movie time
-  Create a 'e2e-mock-interface' that contains:
-    - a text field: 'e2e-mock-movie-time'
-
-
-
-  Unrelated Note:
-  Check if possible to launch flask app from python. Much cleaner than the
-  current version that relies on the flask cli.
-  It'd allow to have a main.py file that'd call the server.py module instead
-  of relying on the 'entangled.py' (where all the routes are set) as the main file
-
+    - How to check call to 'play' was scheduled at the correct time? ✅
+      => Actually wait and check for call
+      => Use delay of 3 sec (+/- 500ms for check)
+      => Use same mechanism used to check for 'seekTo'
   */
 });
