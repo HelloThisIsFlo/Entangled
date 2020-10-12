@@ -23,23 +23,23 @@ def entangled(mqtt_client_mock, plex_api_mock):
     return Entangled(plex_api_mock)
 
 
-def test_connects_to_mqtt_on_connect(entangled: Entangled, mqtt_client_mock):
-    entangled.connect_to_mqtt()
-    mqtt_client_mock.connect.assert_called_once()
-
-
-@patch('atexit.register')
-def test_registers_disconnect_hook_on_connect(atexit_register, entangled: Entangled, mqtt_client_mock):
-    entangled.connect_to_mqtt()
-    atexit_register.assert_called_once_with(mqtt_client_mock.destroy)
-
-
 def first_arg_of_last_call(mock):
     (args, _kwargs) = mock.call_args
     return args[0]
 
 
-class TestSendPlayMessageOnPlay:
+class TestMqttConnection:
+    def test_connects_to_mqtt_on_connect(self, entangled: Entangled, mqtt_client_mock):
+        entangled.connect_to_mqtt()
+        mqtt_client_mock.connect.assert_called_once()
+
+    @patch('atexit.register')
+    def test_registers_disconnect_hook_on_connect(self, atexit_register, entangled: Entangled, mqtt_client_mock):
+        entangled.connect_to_mqtt()
+        atexit_register.assert_called_once_with(mqtt_client_mock.destroy)
+
+
+class TestSendPlayCmd:
     def test_sends_mqtt_message(self, entangled: Entangled, mqtt_client_mock):
         entangled.send_play_cmd()
         mqtt_client_mock.send_message.assert_called_once()
@@ -67,7 +67,7 @@ class TestSendPlayMessageOnPlay:
         def timestamp_in_ms(dt):
             return int(dt.timestamp()) * 1000
 
-        config['entangled']['start_delay'] = 5 # 5 secs
+        config['entangled']['start_delay'] = 5  # 5 secs
         now = datetime.fromisoformat('2020-11-27T13:45:23')
         now_plus_5_sec = datetime.fromisoformat('2020-11-27T13:45:28')
         datetime_mock.now.return_value = now
