@@ -38,6 +38,13 @@ class TestMqttConnection:
         entangled.connect_to_mqtt()
         atexit_register.assert_called_once_with(mqtt_client_mock.destroy)
 
+    def test_listens_for_play_message(self, entangled: Entangled, mqtt_client_mock):
+        entangled.connect_to_mqtt()
+        mqtt_client_mock.listen_for_message.assert_called_once_with(
+            entangled._on_play_cmd,
+            type='play'
+        )
+
 
 class TestSendPlayCmd:
     def test_sends_mqtt_message(self, entangled: Entangled, mqtt_client_mock):
