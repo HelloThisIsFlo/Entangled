@@ -20,7 +20,7 @@ context("Entangled", () => {
     cy.task("mqttDestroy");
   });
 
-  it("sends 'play' message when clicking 'Play'", () => {
+  it.skip("sends 'play' message when clicking 'Play'", () => {
     // The movie is currently stopped at 1h 37min 21sec
     const MOCK_MOVIE_TIME = "1:37:21";
     cy.get("#e2e-mock-movie-time").type(MOCK_MOVIE_TIME);
@@ -59,7 +59,7 @@ context("Entangled", () => {
   it("starts movie at correct time when receiving 'play' message", () => {
     const now = Date.now();
     const movieTime = "2:15:34";
-    const playAtTime = now + seconds(4);
+    const playAtTime = now + seconds(2);
 
     // Some user clicked play, and a 'play' message was sent on the queue
     cy.task("mqttSend", {
@@ -78,7 +78,7 @@ context("Entangled", () => {
       expect(lastMockCall).to.be.equal("seek_to 2 15 34");
     });
 
-    // Then nothing happens until during 'playAt' time, which is 4 sec from now.
+    // Then nothing happens until during 'playAt' time, which is 2 sec from now.
     // This allows:
     //  - Time for all players to receive the message
     //  - Time for buffering after they received the msg and

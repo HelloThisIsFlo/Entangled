@@ -97,3 +97,19 @@ class TestReceivePlayCmd:
         plex_api_mock.seek_to.assert_called_once_with(
             1, 23, 45
         )
+
+    @patch('entangled.entangled.schedule_run')
+    def test_it_schedules_a_play_call_at_correct_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
+        play_at_datetime = datetime.fromisoformat('2020-11-27T13:45:23')
+        play_at_timestamp_ms = 1606484723000
+
+        entangled._on_play_cmd({
+            'type': 'play',
+            'movieTime': '1:23:45',
+            'playAt': play_at_timestamp_ms,
+        })
+
+        schedule_run_mock.assert_called_once_with(
+            play_at_datetime,
+            plex_api_mock.play
+        )

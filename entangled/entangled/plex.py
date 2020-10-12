@@ -11,6 +11,10 @@ class PlexApi(abc.ABC):
     def seek_to(self, hour, minute, second):
         pass
 
+    @abc.abstractmethod
+    def play(self):
+        pass
+
 
 def record_mock_call(func):
     @functools.wraps(func)
@@ -39,10 +43,17 @@ class MockPlexApi(PlexApi):
     def seek_to(self, hour, minute, second):
         pass
 
+    @record_mock_call
+    def play(self):
+        pass
+
 
 class PythonLibPlexApi(PlexApi):
     def current_movie_time(self):
         raise NotImplementedError()
 
     def seek_to(self, hour, minute, second):
+        raise NotImplementedError()
+
+    def play(self):
         raise NotImplementedError()

@@ -3,6 +3,11 @@ from datetime import datetime
 from entangled.mqtt import MQTTClient
 from entangled.plex import PlexApi
 from entangled.config import config
+from entangled.scheduler import schedule_run
+
+
+def now_timestamp():
+    return int(datetime.now().timestamp())
 
 
 class Entangled:
@@ -20,9 +25,6 @@ class Entangled:
         )
 
     def send_play_cmd(self):
-        def now_timestamp():
-            return int(datetime.now().timestamp())
-
         current_movie_time = self.plex_api.current_movie_time()
 
         start_delay = config['entangled']['start_delay']
@@ -41,4 +43,11 @@ class Entangled:
                 cmd['movieTime'].split(':')
             ))
 
+        def play_at_datetime(cmd):
+            return datetime.fromtimestamp(cmd['playAt'] / 1000.0)
+
         self.plex_api.seek_to(*movie_time(cmd))
+        schedule_run(
+            play_at_datetime(cmd),
+            self.plex_api.play
+        )
