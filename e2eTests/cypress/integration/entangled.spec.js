@@ -6,6 +6,10 @@ context("Entangled", () => {
   beforeEach(() => {
     cy.task("mqttInit", "entangled");
     cy.visit(entangledUrl);
+
+    // Reset recorded mock calls
+    cy.get('#e2e-mock-reset-mock-calls').click()
+    cy.get('#e2e-mock-submit').click()
   });
 
   afterEach(() => {

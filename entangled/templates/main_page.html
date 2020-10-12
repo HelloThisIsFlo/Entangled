@@ -4,30 +4,94 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Entangled</title>
+    <style>
+      .hidden {
+        display: none;
+      }
+      #e2e-mock-interface {
+        margin-top: 70px;
+        margin-left: 30px;
+        width: 380px;
+        border: dotted 3px salmon;
+        border-radius: 3px;
+      }
+      #e2e-mock-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+    </style>
   </head>
   <body>
     <h1>Hello {{ example_var }}</h1>
 
     <button id="play-btn">Play</button>
 
-    <form action="/e2e-mock" method="post" id="e2e-mock-interface">
-      <label for="movie-time">Mock Movie Time</label>
-      <input type="text" name="movie-time" id="e2e-mock-movie-time" />
+    <div id="e2e-mock-interface" class="hidden">
+      <form action="/e2e-mock" method="post" id="e2e-mock-form">
+        <label for="movie-time">Mock Movie Time</label>
+        <input type="text" name="movie-time" id="e2e-mock-movie-time" />
+        <label for="e2e-mock-reset-mock-calls">Reset Mock Calls?</label>
+        <input
+          type="checkbox"
+          name="reset-mock-calls"
+          id="e2e-mock-reset-mock-calls"
+        />
 
-      <input type="submit" value="Set mocks" id="e2e-mock-submit">
-    </form>
+        <input type="submit" value="Set mocks" id="e2e-mock-submit" />
+      </form>
+      <ul id="e2e-mock-plex-api-calls">
+        {% for mock_call in mock_calls %}
+        <li>{{ mock_call }}</li>
+        {% endfor %}
+      </ul>
+    </div>
 
     <script>
-      const playBtn = document.querySelector("#play-btn");
-
-      playBtn.addEventListener("click", async (_) => {
-        const response = await fetch("/play", {
-          method: "post",
+      const setupPlayBtn = () => {
+        const playBtn = document.querySelector("#play-btn");
+        playBtn.addEventListener("click", async (_) => {
+          const response = await fetch("/play", {
+            method: "post",
+          });
+          const responseText = await response.text();
+          console.log("Called '/play' endpoint");
+          console.log(`Response: ${responseText}`);
         });
-        const responseText = await response.text();
-        console.log("Called '/play' endpoint");
-        console.log(`Response: ${responseText}`);
-      });
+      };
+
+      setupPlayBtn();
     </script>
+
+    {% if e2e_tests %}
+    <script>
+      const setupMockCallsDisplay = () => {
+        const e2eMockCalls = document.querySelector("#e2e-mock-plex-api-calls");
+        const keepRefreshingMockCalls = () => {
+          fetch("/e2e-mock-calls")
+            .then((resp) => resp.json())
+            .then((mockCalls) => {
+              e2eMockCalls.innerHTML = "";
+              for (mockCall of mockCalls) {
+                const mockCallLi = document.createElement("li");
+                mockCallLi.innerText = mockCall;
+                e2eMockCalls.append(mockCallLi);
+              }
+            });
+
+          setTimeout(keepRefreshingMockCalls, 50);
+        };
+
+        keepRefreshingMockCalls();
+      };
+
+      const setupMockInterface = () => {
+        const e2eMockInterface = document.querySelector("#e2e-mock-interface");
+        e2eMockInterface.classList.remove("hidden");
+      };
+
+      setupMockInterface();
+      setupMockCallsDisplay();
+    </script>
+    {% endif%}
   </body>
 </html>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect
 import atexit
+import json
 
 from entangled.logger import logger
 from entangled.entangled import Entangled
@@ -38,7 +39,10 @@ def initialize_app(env):
 
     @app.route('/')
     def main_page():
-        return render_template('main_page.html')
+        if env == 'e2e_tests':
+            return render_template('main_page.html', e2e_tests=True)
+        else:
+            return render_template('main_page.html')
 
     @app.route('/play', methods=['POST'])
     def play():
@@ -49,6 +53,14 @@ def initialize_app(env):
     def e2e_mock():
         plex_api: MockPlexApi = app.config['PLEX_API']
         plex_api.mock_current_movie_time = request.form['movie-time']
+        if 'reset-mock-calls' in request.form:
+            plex_api.mock_calls = []
+
         return redirect('/')
+
+    @app.route('/e2e-mock-calls', methods=['GET'])
+    def e2e_mock_calls():
+        plex_api: MockPlexApi = app.config['PLEX_API']
+        return json.dumps(plex_api.mock_calls)
 
     return app
