@@ -20,7 +20,7 @@ context("Entangled", () => {
     cy.task("mqttDestroy");
   });
 
-  it.skip("sends 'play' message when clicking 'Play'", () => {
+  it("sends 'play' message when clicking 'Play'", () => {
     // TODO: Fix skipped => The problem was that it would schedule a callback and fuck up the next test
     // TODO: => The problem was that it would schedule a callback and fuck up the next test
     // TODO:    Find a way to prevent that
@@ -49,14 +49,20 @@ context("Entangled", () => {
       expect(message).to.have.property("movieTime");
       expect(message.movieTime).to.equal(MOCK_MOVIE_TIME);
 
-      // Start delay is configured at 3 sec when running the app for e2e tests
-      // We then assert 3 sec ± delta to account for the execution time of the
+      // Start delay is configured at 30 sec when running the app for e2e tests
+      //
+      // This long delay is to prevent the sent 'play' message to be then received and
+      // processed by the app, interfering with other tests.
+      // Having a delay of 30 sec ensures the call scheduled later (30s) will be far enough in
+      // the future that all the other tests have had time to complete by then
+      //
+      // We then assert 30 sec ± delta to account for the execution time of the
       // test & app, as well as propagation time for the mqtt message.
-      const nowPlus3SecHiBound = now + seconds(3) + milliSeconds(deltaMs);
-      const nowPlus3SecLoBound = now + seconds(3) - milliSeconds(deltaMs);
       expect(message).to.have.property("playAt");
-      expect(message.playAt).to.be.above(nowPlus3SecLoBound);
-      expect(message.playAt).to.be.below(nowPlus3SecHiBound);
+      expect(message.playAt).to.be.closeTo(
+        now + seconds(30),
+        milliSeconds(deltaMs)
+      );
     });
   });
 
@@ -97,10 +103,6 @@ context("Entangled", () => {
         expect(timeWhenMovieStartsPlaying).is.closeTo(playAtTime, deltaMs);
       });
   });
-
-  it("ignores play messages if a 'play' cmd is already scheduled", () => {
-    cy.log("TODO")
-  })
 
   /*
   Notes:

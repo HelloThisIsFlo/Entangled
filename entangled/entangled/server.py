@@ -28,7 +28,9 @@ def initialize_app(env):
             app.config['ENTANGLED'].connect_to_mqtt()
 
         if env == 'e2e_tests':
-            config['entangled']['start_delay'] = seconds(3)
+            # TODO: Find a better way to do this. Maybe by injecting the env in entangled and letting it decide of which delay to pick
+            # TODO: But before that, transform the env into an enum
+            config['entangled']['start_delay'] = config['entangled_mock']['start_delay']
 
     if env not in ENVS:
         raise ValueError(f"Invalid env name: '{env}'")
