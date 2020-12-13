@@ -1,10 +1,11 @@
+from logging import log
 from flask import Flask, render_template, request, redirect
 import atexit
 import json
 
 from entangled.logger import logger
 from entangled.entangled import Entangled
-from entangled.plex import PythonLibPlexApi, MockPlexApi
+from entangled.plex import PlexApi, PythonLibPlexApi, MockPlexApi
 from entangled.config import config, minutes, seconds
 
 
@@ -64,5 +65,28 @@ def initialize_app(env):
     def e2e_mock_calls():
         plex_api: MockPlexApi = app.config['PLEX_API']
         return json.dumps(plex_api.mock_calls)
+
+    @app.route('/debug', methods=['GET', 'POST'])
+    def debug():
+        if request.method == 'GET':
+            return render_template('debug.html')
+        if request.method == 'POST':
+            body = request.get_json()
+            plex_api: PlexApi = app.config['PLEX_API']
+
+            if 'seekTo' in body:
+                seek_to_time = body['seekTo']
+                [h, m, s] = list(
+                    map(lambda s: int(s), seek_to_time.split(':'))
+                )
+                plex_api.seek_to(h, m, s)
+                return 'ok'
+
+            elif 'play' in body:
+                plex_api.play()
+                return 'ok'
+
+            elif 'getMovieTime' in body:
+                return json.dumps({'currentMovieTime': plex_api.current_movie_time()})
 
     return app

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug PlexApi</title>
+    <style>
+      * {
+        /* border: 1px red solid; */
+      }
+      #debug {
+        display: flex;
+        justify-content: space-around;
+        width: 800px;
+        border: solid gray 1px;
+        border-radius: 2px;
+        margin: 100px;
+        padding: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="debug">
+      <div class="box">
+        <h3>Current Movie Time</h3>
+        <input type="text" name="" id="current-movie-time" />
+        <button id="get-movie-time">Refresh</button>
+      </div>
+      <div class="box">
+        <h3>Seek to</h3>
+        <input type="text" name="" id="seek-to-time" />
+        <button id="seek-to">Go</button>
+      </div>
+      <div class="box">
+        <h3>Play</h3>
+        <button id="play">Play</button>
+      </div>
+    </div>
+
+    <script>
+      const postDebugData = (dataJson) =>
+        fetch("/debug", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataJson),
+        });
+
+      const playButton = document.querySelector("#play");
+      const seekToButton = document.querySelector("#seek-to");
+      const seekToInput = document.querySelector("#seek-to-time");
+      const getMovieTimeButton = document.querySelector("#get-movie-time");
+      const currentMovieTimeField = document.querySelector(
+        "#current-movie-time"
+      );
+
+      playButton.addEventListener("click", () => {
+        postDebugData({ play: true });
+      });
+      seekToButton.addEventListener("click", () => {
+        const seekToTime = seekToInput.value;
+        if (!seekToTime.match(/\d:\d\d:\d\d/))
+          throw new Error(`invalid seekToTime: ${seekToTime}`);
+        postDebugData({ seekTo: seekToTime });
+      });
+      getMovieTimeButton.addEventListener("click", () => {
+        postDebugData({ getMovieTime: true })
+          .then((response) => response.json())
+          .then((respJson) => {
+            currentMovieTimeField.value = respJson.currentMovieTime;
+          });
+      });
+    </script>
+  </body>
+</html>

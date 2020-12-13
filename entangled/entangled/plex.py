@@ -1,6 +1,8 @@
 import abc
 import functools
 
+from entangled.logger import logger
+
 
 class PlexApi(abc.ABC):
     @abc.abstractmethod
@@ -49,11 +51,17 @@ class MockPlexApi(PlexApi):
 
 
 class PythonLibPlexApi(PlexApi):
+    """
+    TODO: See 'plexClientApi' experiment for impl
+    """
+
     def current_movie_time(self):
-        raise NotImplementedError()
+        logger.info('Getting current movie time')
+        return "1:23:45"
 
     def seek_to(self, hour, minute, second):
-        raise NotImplementedError()
+        logger.info(f"Seeking to: '{hour}:{minute}:{second}")
 
     def play(self):
-        raise NotImplementedError()
+        logger.info('Playing')
+        pass
