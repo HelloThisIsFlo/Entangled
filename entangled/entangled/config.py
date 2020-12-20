@@ -15,7 +15,7 @@ config = {
         'topic': 'entangled'
     },
     'entangled': {
-        'start_delay': seconds(3)
+        'start_delay': seconds(30)
     },
     'entangled_mock': {
         'start_delay': seconds(30)
