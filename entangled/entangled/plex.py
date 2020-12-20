@@ -76,6 +76,13 @@ def ensure_connected_to_resource(func):
 
 
 class PythonLibPlexApi(PlexApi):
+    # TODO
+    # Add a 'connect_to_account' and 'connect_to_resource' method
+    # and call them both in 'Entangled' (test via outside-in testing
+    # that it's been call during 'Entangled' '__init__')
+    # Then in the 'list_all_resources' script, only call 'connect_to_account'
+    # Boom lifecyle problem solved, and it's transparent to the higher level
+    # using 'Entangled'
     def __init__(self) -> None:
         self.username = os.environ['PLEX_USER']
         self.password = os.environ['PLEX_PASS']
