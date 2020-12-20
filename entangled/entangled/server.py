@@ -18,10 +18,10 @@ ENVS = [
 
 def initialize_app(env):
     def initialize_deps():
-        if env == 'e2e_tests':
-            plex_api = MockPlexApi()
-        else:
+        if env == 'prod':
             plex_api = PythonLibPlexApi()
+        else:
+            plex_api = MockPlexApi()
 
         app.config['PLEX_API'] = plex_api
         app.config['ENTANGLED'] = Entangled(plex_api)

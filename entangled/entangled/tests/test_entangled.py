@@ -87,7 +87,8 @@ class TestSendPlayCmd:
 
 
 class TestReceivePlayCmd:
-    def test_it_seeks_to_movie_time(self, entangled: Entangled, plex_api_mock: PlexApi):
+    @patch('entangled.entangled.schedule_run')
+    def test_it_seeks_to_movie_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
         entangled._on_play_cmd({
             'type': 'play',
             'movieTime': '1:23:45',
