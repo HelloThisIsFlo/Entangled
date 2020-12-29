@@ -12,6 +12,7 @@ flask = "*"
 paho-mqtt = "*"
 pytest = "*"
 pytest-watch = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.8"
