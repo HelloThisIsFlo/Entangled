@@ -1,5 +1,6 @@
 from pathlib import Path
 import yaml
+import os
 
 
 def seconds(seconds_num):
@@ -12,12 +13,13 @@ def minutes(minutes_num):
 
 config = {
     'mqtt': {
-        'user': 'REDACTED',
-        'pass': 'REDACTED',
+        'user': os.environ['MQTT_USER'],
+        'pass': os.environ['MQTT_PASS'],
         'domain': 'floriankempenich.com',
         'port': 6789,
         'topic': 'entangled',
-        'client-id': 'entangled-florian'
+        'client-id': 'entangled-florian',
+        'use-ssl': True
     },
     'entangled': {
         'start_delay': seconds(30)

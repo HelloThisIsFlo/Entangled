@@ -23,7 +23,8 @@ class MQTTClient:
             config['mqtt']['pass'])
         self.paho_client.on_connect = self._on_connect
         self.paho_client.on_message = self._on_message
-        self.paho_client.tls_set(ca_certs='/etc/ssl/cert.pem')
+        if config['mqtt']['use-ssl']:
+            self.paho_client.tls_set(ca_certs='/etc/ssl/cert.pem')
 
     def send_message(self, message_as_dict):
         message = json.dumps(message_as_dict)

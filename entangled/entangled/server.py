@@ -18,6 +18,24 @@ ENVS = [
 
 def initialize_app(env):
     def initialize_deps():
+        def tweak_for_e2e_tests():
+            # TODO: Find a better way to do this. Maybe by injecting the env in entangled and letting it decide of which
+            # TODO: delay to pick but before that, transform the env into an enum.
+            start_delay_for_e2e_tests = seconds(300)
+            config['entangled']['start_delay'] = start_delay_for_e2e_tests
+            config['mqtt']['start_delay'] = start_delay_for_e2e_tests
+
+            # Configure with local mqtt
+            config['mqtt']['user'] = 'entangled'
+            config['mqtt']['pass'] = 'hello'
+            config['mqtt']['domain'] = 'localhost'
+            config['mqtt']['port'] = 1883
+            config['mqtt']['topic'] = 'entangled'
+            config['mqtt']['use-ssl'] = False
+
+        if env == 'e2e_tests':
+            tweak_for_e2e_tests()
+
         if env == 'prod':
             plex_api = PythonLibPlexApi()
         else:
@@ -25,14 +43,9 @@ def initialize_app(env):
 
         app.config['PLEX_API'] = plex_api
         app.config['ENTANGLED'] = Entangled(plex_api)
+
         if env == 'prod' or env == 'e2e_tests':
             app.config['ENTANGLED'].connect_to_mqtt()
-
-        if env == 'e2e_tests':
-            # TODO: Find a better way to do this. Maybe by injecting the env in entangled and letting it decide of which delay to pick
-            # TODO: But before that, transform the env into an enum
-            start_delay_for_e2e_tests = seconds(300)
-            config['entangled']['start_delay'] = start_delay_for_e2e_tests
 
     if env not in ENVS:
         raise ValueError(f"Invalid env name: '{env}'")
