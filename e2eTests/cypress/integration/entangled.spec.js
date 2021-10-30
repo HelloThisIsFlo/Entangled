@@ -53,14 +53,14 @@ context("Entangled", () => {
       //
       // This long delay is to prevent the sent 'play' message to be then received and
       // processed by the app, interfering with other tests.
-      // Having a delay of 30 sec ensures the call scheduled later (30s) will be far enough in
+      // Having a delay of 300 sec ensures the call scheduled later (30s) will be far enough in
       // the future that all the other tests have had time to complete by then
       //
-      // We then assert 30 sec ± delta to account for the execution time of the
+      // We then assert 300 sec ± delta to account for the execution time of the
       // test & app, as well as propagation time for the mqtt message.
       expect(message).to.have.property("playAt");
       expect(message.playAt).to.be.closeTo(
-        now + seconds(30),
+        now + seconds(300),
         milliSeconds(deltaMs)
       );
     });

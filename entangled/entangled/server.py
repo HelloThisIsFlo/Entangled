@@ -31,7 +31,7 @@ def initialize_app(env):
         if env == 'e2e_tests':
             # TODO: Find a better way to do this. Maybe by injecting the env in entangled and letting it decide of which delay to pick
             # TODO: But before that, transform the env into an enum
-            start_delay_for_e2e_tests = seconds(30)
+            start_delay_for_e2e_tests = seconds(300)
             config['entangled']['start_delay'] = start_delay_for_e2e_tests
 
     if env not in ENVS:
