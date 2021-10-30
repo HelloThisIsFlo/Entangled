@@ -2,7 +2,7 @@ import json
 import paho.mqtt.client as mqtt
 from entangled.config import config
 from entangled.logger import logger
-from typing import NamedTuple, Callable
+from typing import NamedTuple, Callable, List
 
 
 class MsgListener(NamedTuple):
@@ -11,7 +11,7 @@ class MsgListener(NamedTuple):
 
 
 class MQTTClient:
-    msg_listeners: [MsgListener]
+    msg_listeners: List[MsgListener]
 
     def __init__(self):
         self.topic = config['mqtt']['topic']
