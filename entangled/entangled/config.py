@@ -12,11 +12,12 @@ def minutes(minutes_num):
 
 config = {
     'mqtt': {
-        'user': 'entangled',
-        'pass': 'hello',
-        'domain': 'localhost',
-        'port': 1883,
-        'topic': 'entangled'
+        'user': 'REDACTED',
+        'pass': 'REDACTED',
+        'domain': 'floriankempenich.com',
+        'port': 6789,
+        'topic': 'entangled',
+        'client-id': 'entangled-florian'
     },
     'entangled': {
         'start_delay': seconds(30)
