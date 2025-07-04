@@ -33,8 +33,16 @@ def initialize_app(env):
             config['mqtt']['topic'] = 'entangled'
             config['mqtt']['use-ssl'] = False
 
+        def tweak_for_unit_tests():
+            # Disable SSL for unit tests to avoid certificate issues
+            config['mqtt']['use-ssl'] = False
+            # Use short delay for faster tests
+            config['entangled']['start_delay'] = seconds(1)
+
         if env == 'e2e_tests':
             tweak_for_e2e_tests()
+        elif env == 'unit_tests':
+            tweak_for_unit_tests()
 
         if env == 'prod':
             plex_api = PythonLibPlexApi()
@@ -65,6 +73,18 @@ def initialize_app(env):
     def play():
         app.config['ENTANGLED'].send_play_cmd()
         return 'playing'
+
+    @app.route('/pause', methods=['POST'])
+    def pause():
+        """Pause synchronized playback across all clients"""
+        app.config['ENTANGLED'].send_pause_cmd()
+        return 'pausing'
+
+    @app.route('/resume', methods=['POST'])
+    def resume():
+        """Resume synchronized playback across all clients"""
+        app.config['ENTANGLED'].send_resume_cmd()
+        return 'resuming'
 
     @app.route('/e2e-mock', methods=['POST'])
     def e2e_mock():
@@ -98,6 +118,10 @@ def initialize_app(env):
 
             elif 'play' in body:
                 plex_api.play()
+                return 'ok'
+
+            elif 'pause' in body:
+                plex_api.pause()
                 return 'ok'
 
             elif 'getMovieTime' in body:
