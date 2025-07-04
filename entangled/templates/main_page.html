@@ -5,31 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Entangled</title>
     <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        background-color: #f5f5f5;
+      }
+      
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+      
+      button {
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      
+      #play-btn {
+        background-color: #4CAF50;
+        color: white;
+      }
+      
+      #play-btn:hover {
+        background-color: #45a049;
+      }
+      
+      #pause-btn {
+        background-color: #ff9800;
+        color: white;
+      }
+      
+      #pause-btn:hover {
+        background-color: #e68900;
+      }
+      
+      #resume-btn {
+        background-color: #2196F3;
+        color: white;
+      }
+      
+      #resume-btn:hover {
+        background-color: #1976D2;
+      }
+      
       .hidden {
         display: none;
       }
+      
       #e2e-mock-interface {
         margin-top: 70px;
         margin-left: 30px;
         width: 380px;
         border: dotted 3px salmon;
         border-radius: 3px;
+        padding: 15px;
       }
+      
       #e2e-mock-form {
         display: grid;
         grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+      
+      #e2e-mock-form input[type="text"] {
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      
+      #e2e-mock-form input[type="submit"] {
+        grid-column: span 2;
+        padding: 8px;
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      
+      #e2e-mock-plex-api-calls {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 3px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      
+      #e2e-mock-plex-api-calls li {
+        margin: 5px 0;
+        padding: 3px;
+        background-color: white;
+        border-radius: 2px;
+        font-family: monospace;
       }
     </style>
   </head>
   <body>
-    <h1>Hello {{ example_var }}</h1>
-
-    <button id="play-btn">Play</button>
+    <div class="container">
+      <h1>Entangled Synchronization</h1>
+      
+      <div class="controls">
+        <button id="play-btn">Play</button>
+        <button id="pause-btn">Pause</button>
+        <button id="resume-btn">Resume</button>
+      </div>
+      
+      <div id="status" style="text-align: center; color: #666; margin-top: 20px;"></div>
+    </div>
 
     <div id="e2e-mock-interface" class="hidden">
+      <h3>Testing Interface</h3>
       <form action="/e2e-mock" method="post" id="e2e-mock-form">
         <label for="movie-time">Mock Movie Time</label>
-        <input type="text" name="movie-time" id="e2e-mock-movie-time" />
+        <input type="text" name="movie-time" id="e2e-mock-movie-time" placeholder="1:23:45" />
         <label for="e2e-mock-reset-mock-calls">Reset Mock Calls?</label>
         <input
           type="checkbox"
@@ -39,27 +150,78 @@
 
         <input type="submit" value="Set mocks" id="e2e-mock-submit" />
       </form>
-      <ul id="e2e-mock-plex-api-calls">
-        {% for mock_call in mock_calls %}
-        <li>{{ mock_call }}</li>
-        {% endfor %}
-      </ul>
+      <div>
+        <h4>Plex API Calls:</h4>
+        <ul id="e2e-mock-plex-api-calls">
+          {% for mock_call in mock_calls %}
+          <li>{{ mock_call }}</li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
 
     <script>
-      const setupPlayBtn = () => {
+      const statusDiv = document.querySelector("#status");
+      
+      const updateStatus = (message) => {
+        statusDiv.textContent = message;
+        setTimeout(() => {
+          statusDiv.textContent = "";
+        }, 3000);
+      };
+      
+      const setupControlButtons = () => {
         const playBtn = document.querySelector("#play-btn");
+        const pauseBtn = document.querySelector("#pause-btn");
+        const resumeBtn = document.querySelector("#resume-btn");
+        
         playBtn.addEventListener("click", async (_) => {
-          const response = await fetch("/play", {
-            method: "post",
-          });
-          const responseText = await response.text();
-          console.log("Called '/play' endpoint");
-          console.log(`Response: ${responseText}`);
+          try {
+            const response = await fetch("/play", {
+              method: "post",
+            });
+            const responseText = await response.text();
+            console.log("Called '/play' endpoint");
+            console.log(`Response: ${responseText}`);
+            updateStatus("Synchronizing playback...");
+          } catch (error) {
+            console.error("Error calling /play:", error);
+            updateStatus("Error: Failed to synchronize playback");
+          }
+        });
+        
+        pauseBtn.addEventListener("click", async (_) => {
+          try {
+            const response = await fetch("/pause", {
+              method: "post",
+            });
+            const responseText = await response.text();
+            console.log("Called '/pause' endpoint");
+            console.log(`Response: ${responseText}`);
+            updateStatus("Synchronizing pause...");
+          } catch (error) {
+            console.error("Error calling /pause:", error);
+            updateStatus("Error: Failed to synchronize pause");
+          }
+        });
+        
+        resumeBtn.addEventListener("click", async (_) => {
+          try {
+            const response = await fetch("/resume", {
+              method: "post",
+            });
+            const responseText = await response.text();
+            console.log("Called '/resume' endpoint");
+            console.log(`Response: ${responseText}`);
+            updateStatus("Synchronizing resume...");
+          } catch (error) {
+            console.error("Error calling /resume:", error);
+            updateStatus("Error: Failed to synchronize resume");
+          }
         });
       };
 
-      setupPlayBtn();
+      setupControlButtons();
     </script>
 
     {% if e2e_tests %}

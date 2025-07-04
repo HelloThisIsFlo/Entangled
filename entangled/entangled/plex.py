@@ -1,6 +1,7 @@
 import abc
 import os
 import functools
+import logging
 
 from entangled.logger import logger
 from plexapi.myplex import MyPlexAccount
@@ -18,6 +19,10 @@ class PlexApi(abc.ABC):
 
     @abc.abstractmethod
     def play(self):
+        pass
+
+    @abc.abstractmethod
+    def pause(self):
         pass
 
 
@@ -52,6 +57,10 @@ class MockPlexApi(PlexApi):
     def play(self):
         pass
 
+    @record_mock_call
+    def pause(self):
+        pass
+
 
 def ensure_connected_to_account(func):
     @functools.wraps(func)
@@ -75,62 +84,146 @@ def ensure_connected_to_resource(func):
     return func_with_check
 
 
+class PlexConnectionError(Exception):
+    """Custom exception for Plex connection issues"""
+    pass
+
+
 class PythonLibPlexApi(PlexApi):
-    # TODO
-    # Add a 'connect_to_account' and 'connect_to_resource' method
-    # and call them both in 'Entangled' (test via outside-in testing
-    # that it's been call during 'Entangled' '__init__')
-    # Then in the 'list_all_resources' script, only call 'connect_to_account'
-    # Boom lifecyle problem solved, and it's transparent to the higher level
-    # using 'Entangled'
     def __init__(self) -> None:
         self.username = os.environ['PLEX_USER']
         self.password = os.environ['PLEX_PASS']
-        self.resource_name = os.environ['PLEX_RESOURCE']
-        self._connect_to_resource()
-
-    def _connect_to_resource(self):
-        self.account = MyPlexAccount(self.username, self.password)
-        if (self.resource_name):
-            self.resource = self.account.resource(self.resource_name).connect()
+        self.resource_name = os.environ.get('PLEX_RESOURCE', '')
+        self.account = None
+        self.resource = None
+        self.connect_to_account()
+        if self.resource_name:
+            self.connect_to_resource()
         else:
-            logger.info("DEBUG TEMP: Add resource to envvar")
+            logger.warning("No PLEX_RESOURCE specified. Call connect_to_resource() after setting resource name.")
+
+    def connect_to_account(self):
+        """Connect to Plex account using credentials"""
+        try:
+            logger.info(f"Connecting to Plex account for user: {self.username}")
+            self.account = MyPlexAccount(self.username, self.password)
+            logger.info("Successfully connected to Plex account")
+        except Exception as e:
+            logger.error(f"Failed to connect to Plex account: {e}")
+            raise PlexConnectionError(f"Failed to connect to Plex account: {e}")
+
+    def connect_to_resource(self, resource_name=None):
+        """Connect to a specific Plex resource/client"""
+        if not self.account:
+            raise PlexConnectionError("Must connect to account before connecting to resource")
+        
+        target_resource = resource_name or self.resource_name
+        if not target_resource:
+            raise PlexConnectionError("No resource name specified")
+        
+        try:
+            logger.info(f"Connecting to Plex resource: {target_resource}")
+            plex_resource = self.account.resource(target_resource)
+            self.resource = plex_resource.connect()
+            self.resource_name = target_resource
+            logger.info(f"Successfully connected to Plex resource: {target_resource}")
+        except Exception as e:
+            logger.error(f"Failed to connect to Plex resource '{target_resource}': {e}")
+            raise PlexConnectionError(f"Failed to connect to Plex resource '{target_resource}': {e}")
 
     @ensure_connected_to_account
     def all_resources(self):
-        return self.account.resources()
+        """Get all available Plex resources"""
+        try:
+            return self.account.resources()
+        except Exception as e:
+            logger.error(f"Failed to get Plex resources: {e}")
+            raise PlexConnectionError(f"Failed to get Plex resources: {e}")
 
     @ensure_connected_to_resource
     def current_movie_time(self):
+        """Get current movie time with proper error handling"""
         logger.info('Getting current movie time')
-        # TODO: Fix 'self.resource.timeline.time' can be None sometimes if the movie was paused. Find solution.
-        print(self.resource.timeline.time)
-        import math
-        timestamp = math.floor(self.resource.timeline.time / 1000)
-        hours = math.floor(timestamp/3600)
-        min = math.floor(timestamp / 60) - hours * 60
-        secs = timestamp - hours*3600 - min*60
-        current_time = f"{hours}:{min:02}:{secs:02}"
-        return current_time
+        
+        try:
+            # Refresh timeline to get current state
+            self.resource.timeline()
+            
+            # Check if timeline.time is None (movie is paused or stopped)
+            if self.resource.timeline.time is None:
+                logger.warning("Timeline time is None - media may be paused or stopped")
+                # Return last known position or 0:00:00 if not available
+                if hasattr(self.resource.timeline, 'offset') and self.resource.timeline.offset:
+                    timestamp = self.resource.timeline.offset // 1000
+                else:
+                    logger.warning("No timeline offset available, returning 0:00:00")
+                    return "0:00:00"
+            else:
+                timestamp = self.resource.timeline.time // 1000
+            
+            # Convert milliseconds to readable time format
+            hours = timestamp // 3600
+            minutes = (timestamp % 3600) // 60
+            seconds = timestamp % 60
+            
+            current_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+            logger.info(f"Current movie time: {current_time}")
+            return current_time
+            
+        except Exception as e:
+            logger.error(f"Failed to get current movie time: {e}")
+            raise PlexConnectionError(f"Failed to get current movie time: {e}")
 
     @ensure_connected_to_resource
     def seek_to(self, hour, minute, second):
-        logger.info(f"Seeking to: '{hour}:{minute}:{second}")
+        """Seek to specific time position"""
+        logger.info(f"Seeking to: {hour}:{minute:02d}:{second:02d}")
 
-        def seconds(seconds_num):
+        def seconds_to_ms(seconds_num):
             return seconds_num * 1000
 
-        def minutes(minutes_num):
-            return seconds(minutes_num * 60)
+        def minutes_to_ms(minutes_num):
+            return seconds_to_ms(minutes_num * 60)
 
-        def hours(hours_num):
-            return minutes(hours_num * 60)
+        def hours_to_ms(hours_num):
+            return minutes_to_ms(hours_num * 60)
 
-        self.resource.seekTo(
-            hours(hour) + minutes(minute) + seconds(second)
-        )
+        try:
+            seek_time_ms = hours_to_ms(hour) + minutes_to_ms(minute) + seconds_to_ms(second)
+            self.resource.seekTo(seek_time_ms)
+            logger.info(f"Successfully seeked to {hour}:{minute:02d}:{second:02d}")
+        except Exception as e:
+            logger.error(f"Failed to seek to {hour}:{minute:02d}:{second:02d}: {e}")
+            raise PlexConnectionError(f"Failed to seek: {e}")
 
     @ensure_connected_to_resource
     def play(self):
-        logger.info('Playing')
-        self.resource.play()
+        """Start/resume playback"""
+        logger.info('Starting playback')
+        try:
+            self.resource.play()
+            logger.info('Playback started successfully')
+        except Exception as e:
+            logger.error(f"Failed to start playback: {e}")
+            raise PlexConnectionError(f"Failed to start playback: {e}")
+
+    @ensure_connected_to_resource
+    def pause(self):
+        """Pause playback"""
+        logger.info('Pausing playback')
+        try:
+            self.resource.pause()
+            logger.info('Playback paused successfully')
+        except Exception as e:
+            logger.error(f"Failed to pause playback: {e}")
+            raise PlexConnectionError(f"Failed to pause playback: {e}")
+
+    def is_connected(self):
+        """Check if connected to both account and resource"""
+        return self.account is not None and self.resource is not None
+
+    def disconnect(self):
+        """Clean up connections"""
+        logger.info("Disconnecting from Plex")
+        self.resource = None
+        self.account = None

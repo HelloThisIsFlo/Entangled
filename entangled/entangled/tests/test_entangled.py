@@ -40,10 +40,23 @@ class TestMqttConnection:
 
     def test_listens_for_play_message(self, entangled: Entangled, mqtt_client_mock):
         entangled.connect_to_mqtt()
-        mqtt_client_mock.listen_for_message.assert_called_once_with(
-            entangled._on_play_cmd,
-            type='play'
-        )
+        # Check that listen_for_message was called 3 times (play, pause, resume)
+        assert mqtt_client_mock.listen_for_message.call_count == 3
+        
+        # Check the calls individually
+        calls = mqtt_client_mock.listen_for_message.call_args_list
+        
+        # Play message listener
+        assert calls[0][0][0] == entangled._on_play_cmd
+        assert calls[0][1]['type'] == 'play'
+        
+        # Pause message listener  
+        assert calls[1][0][0] == entangled._on_pause_cmd
+        assert calls[1][1]['type'] == 'pause'
+        
+        # Resume message listener
+        assert calls[2][0][0] == entangled._on_resume_cmd
+        assert calls[2][1]['type'] == 'resume'
 
 
 class TestSendPlayCmd:
@@ -86,6 +99,86 @@ class TestSendPlayCmd:
         assert msg_sent['playAt'] == timestamp_in_ms(now_plus_5_sec)
 
 
+class TestSendPauseCmd:
+    def test_sends_mqtt_message(self, entangled: Entangled, mqtt_client_mock):
+        entangled.send_pause_cmd()
+        mqtt_client_mock.send_message.assert_called_once()
+
+    def test_gets_current_movie_time(self, entangled, plex_api_mock: PlexApi):
+        entangled.send_pause_cmd()
+        plex_api_mock.current_movie_time.assert_called_once()
+
+    def test_mqtt_message_contains_type(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
+        entangled.send_pause_cmd()
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'type' in msg_sent
+        assert msg_sent['type'] == 'pause'
+
+    def test_mqtt_message_contains_current_movie_time(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
+        MOCK_MOVIE_TIME = "1:15:42"
+        plex_api_mock.current_movie_time.return_value = MOCK_MOVIE_TIME
+        entangled.send_pause_cmd()
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'movieTime' in msg_sent
+        assert msg_sent['movieTime'] == MOCK_MOVIE_TIME
+
+    @patch('entangled.entangled.datetime')
+    def test_mqtt_message_contains_pause_at_time(self, datetime_mock, entangled, plex_api_mock: PlexApi, mqtt_client_mock):
+        def timestamp_in_ms(dt):
+            return int(dt.timestamp()) * 1000
+
+        config['entangled']['start_delay'] = 3  # 3 secs
+        now = datetime.fromisoformat('2020-11-27T14:30:15')
+        now_plus_3_sec = datetime.fromisoformat('2020-11-27T14:30:18')
+        datetime_mock.now.return_value = now
+
+        entangled.send_pause_cmd()
+
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'pauseAt' in msg_sent
+        assert msg_sent['pauseAt'] == timestamp_in_ms(now_plus_3_sec)
+
+
+class TestSendResumeCmd:
+    def test_sends_mqtt_message(self, entangled: Entangled, mqtt_client_mock):
+        entangled.send_resume_cmd()
+        mqtt_client_mock.send_message.assert_called_once()
+
+    def test_gets_current_movie_time(self, entangled, plex_api_mock: PlexApi):
+        entangled.send_resume_cmd()
+        plex_api_mock.current_movie_time.assert_called_once()
+
+    def test_mqtt_message_contains_type(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
+        entangled.send_resume_cmd()
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'type' in msg_sent
+        assert msg_sent['type'] == 'resume'
+
+    def test_mqtt_message_contains_current_movie_time(self, entangled, mqtt_client_mock, plex_api_mock: PlexApi):
+        MOCK_MOVIE_TIME = "0:45:20"
+        plex_api_mock.current_movie_time.return_value = MOCK_MOVIE_TIME
+        entangled.send_resume_cmd()
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'movieTime' in msg_sent
+        assert msg_sent['movieTime'] == MOCK_MOVIE_TIME
+
+    @patch('entangled.entangled.datetime')
+    def test_mqtt_message_contains_resume_at_time(self, datetime_mock, entangled, plex_api_mock: PlexApi, mqtt_client_mock):
+        def timestamp_in_ms(dt):
+            return int(dt.timestamp()) * 1000
+
+        config['entangled']['start_delay'] = 2  # 2 secs
+        now = datetime.fromisoformat('2020-11-27T16:20:45')
+        now_plus_2_sec = datetime.fromisoformat('2020-11-27T16:20:47')
+        datetime_mock.now.return_value = now
+
+        entangled.send_resume_cmd()
+
+        msg_sent = first_arg_of_last_call(mqtt_client_mock.send_message)
+        assert 'resumeAt' in msg_sent
+        assert msg_sent['resumeAt'] == timestamp_in_ms(now_plus_2_sec)
+
+
 class TestReceivePlayCmd:
     @patch('entangled.entangled.schedule_run')
     def test_it_seeks_to_movie_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
@@ -113,4 +206,64 @@ class TestReceivePlayCmd:
         schedule_run_mock.assert_called_once_with(
             play_at_datetime,
             plex_api_mock.play
+        )
+
+
+class TestReceivePauseCmd:
+    @patch('entangled.entangled.schedule_run')
+    def test_it_seeks_to_movie_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
+        entangled._on_pause_cmd({
+            'type': 'pause',
+            'movieTime': '2:10:30',
+            'pauseAt': 1602516359362,
+        })
+
+        plex_api_mock.seek_to.assert_called_once_with(
+            2, 10, 30
+        )
+
+    @patch('entangled.entangled.schedule_run')
+    def test_it_schedules_a_pause_call_at_correct_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
+        pause_at_datetime = datetime.fromisoformat('2020-11-27T14:30:15')
+        pause_at_timestamp_ms = 1606487415000
+
+        entangled._on_pause_cmd({
+            'type': 'pause',
+            'movieTime': '2:10:30',
+            'pauseAt': pause_at_timestamp_ms,
+        })
+
+        schedule_run_mock.assert_called_once_with(
+            pause_at_datetime,
+            plex_api_mock.pause
+        )
+
+
+class TestReceiveResumeCmd:
+    @patch('entangled.entangled.schedule_run')
+    def test_it_seeks_to_movie_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
+        entangled._on_resume_cmd({
+            'type': 'resume',
+            'movieTime': '0:45:12',
+            'resumeAt': 1602516359362,
+        })
+
+        plex_api_mock.seek_to.assert_called_once_with(
+            0, 45, 12
+        )
+
+    @patch('entangled.entangled.schedule_run')
+    def test_it_schedules_a_resume_call_at_correct_time(self, schedule_run_mock, entangled: Entangled, plex_api_mock: PlexApi):
+        resume_at_datetime = datetime.fromisoformat('2020-11-27T16:20:45')
+        resume_at_timestamp_ms = 1606494045000
+
+        entangled._on_resume_cmd({
+            'type': 'resume',
+            'movieTime': '0:45:12',
+            'resumeAt': resume_at_timestamp_ms,
+        })
+
+        schedule_run_mock.assert_called_once_with(
+            resume_at_datetime,
+            plex_api_mock.play  # Resume uses play method
         )
