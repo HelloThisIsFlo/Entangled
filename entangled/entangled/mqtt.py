@@ -17,7 +17,10 @@ class MQTTClient:
         self.topic = config['mqtt']['topic']
         self.msg_listeners = []
 
-        self.paho_client = mqtt.Client(client_id=config['mqtt']['client-id'])
+        self.paho_client = mqtt.Client(
+            mqtt.CallbackAPIVersion.VERSION2,
+            client_id=config['mqtt']['client-id'],
+        )
         self.paho_client.username_pw_set(
             config['mqtt']['user'],
             config['mqtt']['pass'])
@@ -52,7 +55,7 @@ class MQTTClient:
             )
         )
 
-    def _on_connect(self, client, _userdata, _flags, _rc):
+    def _on_connect(self, client, _userdata, _flags, _rc, _properties=None):
         logger.info('Connected to MQTT')
         client.subscribe(self.topic)
         logger.info(f"Subscribed to {self.topic}")

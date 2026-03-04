@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: entangled
+  labels:
+    app: mosquitto
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:2
+          ports:
+            - containerPort: 1883
+              name: mqtt
+          volumeMounts:
+            - name: config
+              mountPath: /mosquitto/config/mosquitto.conf
+              subPath: mosquitto.conf
+              readOnly: true
+            - name: password
+              mountPath: /mosquitto/config/password
+              subPath: password
+              readOnly: true
+            - name: data
+              mountPath: /mosquitto/data
+            - name: log
+              mountPath: /mosquitto/log
+      volumes:
+        - name: config
+          configMap:
+            name: mosquitto-config
+        - name: password
+          secret:
+            secretName: mosquitto-password
+            items:
+              - key: password
+                path: password
+        - name: data
+          emptyDir: {}
+        - name: log
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  namespace: entangled
+  labels:
+    app: mosquitto
+spec:
+  selector:
+    app: mosquitto
+  ports:
+    - port: 1883
+      targetPort: 1883
+      name: mqtt
